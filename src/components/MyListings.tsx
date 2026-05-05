@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import {useLanguage} from "../context/LanguageContext";
+import noListingsImage from "../assets/images/don'tHaveAnyListingsYet.png";
 
 const MyListings = () => {
     const { language } = useLanguage();
@@ -32,6 +33,24 @@ const MyListings = () => {
         }
         handleRequest(requestString)
     }, [requestString]);
+
+    if (listings.length === 0) {
+        return (
+            <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
+                <p
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
+                    style={{textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)"}}
+                >
+                    {contents.myListings[12].text}
+                </p>
+                <img
+                    src={noListingsImage}
+                    alt="No listings found"
+                    className="w-4/5 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-contain flex-1"
+                />
+            </div>
+        );
+    }
 
     return(
         <div>

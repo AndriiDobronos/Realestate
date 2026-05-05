@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import {useLanguage} from "../context/LanguageContext";
+import noNotificationsFound from '../assets/images/noNotificationsFound.png';
 //import {setNotificationProperty} from "../features/notification/notificationSlice";
 interface Notification {
     _id: string;
@@ -133,7 +134,21 @@ const MyNotification = () => {
     };
 
     if (!notifications[0]?._id ) {
-        return (<div><div className="h-24"></div><p style={{textShadow:"2px 1px 2px rgba(0, 0, 0, 0.6)"}} className="text-grey-600 text-5xl">{contents.myNotification[1].text}</p></div>);
+        return (
+            <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
+                <p
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
+                    style={{textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)"}}
+                >
+                    {contents.myNotification[1].text}
+                </p>
+                <img
+                    src={noNotificationsFound}
+                    alt="No notifications found"
+                    className="w-4/5 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-contain flex-1"
+                />
+            </div>
+        );
     } else {
         return (
             <div>

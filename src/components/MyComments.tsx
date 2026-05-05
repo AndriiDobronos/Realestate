@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import {useLanguage} from "../context/LanguageContext";
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
+import noCommentsFound from '../assets/images/noCommentsFound.png';
 
 interface Comment {
     _id: string;
@@ -178,9 +179,21 @@ const MyComments = () => {
     };
 
     if (!listings[0]?._id || !comments[0]?._id) {
-        return (<div><div className="h-24"></div><p style={{textShadow:"2px 1px 2px rgba(0, 0, 0, 0.6)"}} className="text-grey-600 text-5xl">
-            {contents.myComments[0].text} {message}
-        </p></div>);
+        return (
+            <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
+                <p
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
+                    style={{textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)"}}
+                >
+                    {contents.myComments[0].text}
+                </p>
+                <img
+                    src={noCommentsFound}
+                    alt="No comments found"
+                    className="w-4/5 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl object-contain flex-1"
+                />
+            </div>
+        );
     } else {
         return (
             <div className="myComments">
