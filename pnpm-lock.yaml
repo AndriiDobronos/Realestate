@@ -51,6 +51,9 @@ importers:
       '@eslint/js':
         specifier: ^9.17.0
         version: 9.17.0
+      '@types/leaflet':
+        specifier: ^1.9.21
+        version: 1.9.21
       '@types/react':
         specifier: ^18.3.18
         version: 18.3.18
@@ -594,8 +597,14 @@ packages:
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
 
+  '@types/geojson@7946.0.16':
+    resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
+
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/leaflet@1.9.21':
+    resolution: {integrity: sha512-TbAd9DaPGSnzp6QvtYngntMZgcRk+igFELwR2N99XZn7RXUdKgsXMR+28bUO0rPsWp8MIu/f47luLIQuSLYv/w==}
 
   '@types/lodash.clonedeep@4.5.9':
     resolution: {integrity: sha512-19429mWC+FyaAhOLzsS8kZUsI+/GmBAQ0HFiCPsKGU+7pBXOQWhyrY6xNNDwUSX8SMZMJvuFVMF9O5dQOlQK9Q==}
@@ -807,8 +816,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  caniuse-lite@1.0.30001754:
-    resolution: {integrity: sha512-x6OeBXueoAceOmotzx3PO4Zpt4rzpeIFsSr6AAePTZxSkXiYDUmpypEl7e2+8NCd9bD7bXjqyef8CJYPC1jfxg==}
+  caniuse-lite@1.0.30001791:
+    resolution: {integrity: sha512-yk0l/YSrOnFZk3UROpDLQD9+kC1l4meK/wed583AXrzoarMGJcbRi2Q4RaUYbKxYAsZ8sWmaSa/DsLmdBeI1vQ==}
 
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
@@ -2249,7 +2258,13 @@ snapshots:
 
   '@types/estree@1.0.6': {}
 
+  '@types/geojson@7946.0.16': {}
+
   '@types/json-schema@7.0.15': {}
+
+  '@types/leaflet@1.9.21':
+    dependencies:
+      '@types/geojson': 7946.0.16
 
   '@types/lodash.clonedeep@4.5.9':
     dependencies:
@@ -2448,7 +2463,7 @@ snapshots:
   autoprefixer@10.4.20(postcss@8.4.49):
     dependencies:
       browserslist: 4.24.3
-      caniuse-lite: 1.0.30001754
+      caniuse-lite: 1.0.30001791
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
@@ -2486,7 +2501,7 @@ snapshots:
 
   browserslist@4.24.3:
     dependencies:
-      caniuse-lite: 1.0.30001754
+      caniuse-lite: 1.0.30001791
       electron-to-chromium: 1.5.76
       node-releases: 2.0.19
       update-browserslist-db: 1.1.1(browserslist@4.24.3)
@@ -2497,7 +2512,7 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
-  caniuse-lite@1.0.30001754: {}
+  caniuse-lite@1.0.30001791: {}
 
   chai@6.2.2: {}
 
