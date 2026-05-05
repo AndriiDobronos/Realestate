@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import ImageUpLoader from "../components/ImageUpLoader";
 import { removeImage} from "../features/upLoadImages/upLoadImagesSlice";
 import { useDispatch } from 'react-redux';
@@ -23,9 +23,11 @@ const AddAgent = () => {
     const [rating, setRating] =  useState("");
     const [license, setLicense] =  useState("");
     const [phone, setPhone] =  useState("");
+    const navigate = useNavigate();
     const index = 0;
     const isEditMode = (!!agentId && agentId !== "new");
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
 
     useEffect(() => {
         if (isEditMode) {
@@ -76,7 +78,7 @@ const AddAgent = () => {
                 timestamp: Math.floor(Date.now() / 1000),
             });
 
-            await axios.post(`https://api.cloudinary.com/v1_1/dndnmla09/image/destroy`, {
+            await axios.post(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, {
                 public_id: publicId,
                 api_key: data.api_key,
                 timestamp: data.timestamp,
@@ -145,19 +147,14 @@ const AddAgent = () => {
                 timestamp: Math.floor(Date.now() / 1000),
             });
 
-            await axios.post(`https://api.cloudinary.com/v1_1/dndnmla09/image/destroy`, {
+            await axios.post(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, {
                 public_id: publicId,
                 api_key: data.api_key,
                 timestamp: data.timestamp,
                 signature: data.signature,
             });
 
-            // Обновляем состояние
-            // setUploadedImages(prev => {
-            //     const newImages = [...prev];
-            //     newImages[0] = null;
-            //     return newImages;
-            // });
+        
             setUploadedImages([null]);
         } catch (error) {
             console.error('Error deleting image:', error);
@@ -262,9 +259,13 @@ const AddAgent = () => {
                         onDelete={handleImageDeleteUploading}
                         initialUrl={uploadedImages[index]}
                     />
-                    <div className="ml-6 flex flex-col">
-                        <p className="text-white">*{uploadedImages}</p>
-                        <p className="text-white">*{message}</p>
+                    <div className="ml-6 flex flex-col gap-2">
+                        {/* <p className="text-white text-xs">*{uploadedImages}</p> */}
+                        {message && (
+                            <p className={`text-sm font-semibold ${message.toLowerCase().includes('success') ? 'text-green-300' : 'text-red-400'}`}>
+                                {message}
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="flex flex-col px-6">
@@ -300,13 +301,22 @@ const AddAgent = () => {
                     {/*{Phone number: }*/}
                     <input  placeholder="Phone" type="text" value={phone} onChange={(e) => handleInputPhone(e.target.value)}
                             className="border-gray-400 border-2 rounded text-gray-600 pl-2" name="phone" />
-                    <div>
+                    <div className="button-container flex flex-row gap-4">
                         {<button onClick={handleAddOrSaveAgent}
-                                 className={isEditMode ? "text-white bg-yellow-600 mt-3 mx-16 mb-4" : "mt-3 mx-16 mb-4 text-gray-600"}
+                                 className={isEditMode ? "text-white bg-yellow-600 hover:bg-yellow-700 mt-3 mx-16 mb-4" : "mt-3 mx-16 mb-4 text-gray-600"}
                         >{isEditMode ? contents.addAgent[9].text : contents.addAgent[10].text}
                         </button>}  {/*{"Save Changes" : "Add Agent"}*/}
-                        {isEditMode && <button onClick={handleDeleteAgentData} className="bg-red-500 text-white">{contents.addAgent[11].text}</button>}
+                        {isEditMode && <button onClick={handleDeleteAgentData} className="bg-red-500 hover:bg-red-600 mt-3 mb-4 text-white">{contents.addAgent[11].text}</button>}
                         {/*{Delete agent}*/}
+                        {message?.toLowerCase().includes('success') && (
+                            <button
+                                onClick={() => navigate('/agents')}
+                                className="bg-green-600 hover:bg-green-700 text-white mt-3 mb-4 px-3 transition-colors"
+                            >
+                                {contents.addAgent[12].text}
+                                {/* До списку ріелторів */}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
