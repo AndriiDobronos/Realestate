@@ -1,188 +1,234 @@
-import { useEffect, useState } from "react";
-import { useRef } from "react";
-//import PopupContainer from "./PopupContainer";
-//import ReactDOM from "react-dom/client";
+import { useEffect, useRef, useState, useMemo, memo } from "react";
 import L from "leaflet";
 import "leaflet-control-geocoder";
-//import { fetchListings } from "../services/ListingService";
 import "./LeafletMaps.css";
 
-const LeafletMaps = ({ listings, formMapFilter }:{listings:any,formMapFilter:any}) => {
-    const markerGroupRef = useRef(null);
-    const circleRef = useRef(null);
-    const centerMarkerRef = useRef(null);
-    const [map, setMap] = useState(null);
-    //const [listings, setListings] = useState([]);
-    //const [filteredListings, setFilteredListings] = useState([]);
+const COORDS_CACHE_KEY = "coordsCache";
+const GEOCODE_DELAY_MS = 1200; // Nominatim usage policy: max 1 req/sec
 
+function readCoordsCache(): Record<string, { lat: number; lon: number }> {
+    try { return JSON.parse(localStorage.getItem(COORDS_CACHE_KEY) || "{}"); }
+    catch { return {}; }
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
+
+function buildMarker(listing: any, lat: number, lon: number): L.Marker {
+    return L.marker([lat, lon], {
+        icon: L.divIcon({
+            className: "custom-marker",
+            html: `<div class="price-tag">$${listing.price}</div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+        }),
+    }).bindPopup(`
+        <div>
+            <strong>${listing.propertyType}</strong><br/>
+            $${listing.price}<br/>
+            <a href="/details/${listing._id}" id="a">View details</a>
+        </div>
+    `);
+}
+
+const LeafletMaps = ({
+    listings,
+    formMapFilter,
+    isVisible = false,
+}: {
+    listings: any[];
+    formMapFilter: any;
+    isVisible?: boolean;
+}) => {
+    const containerRef    = useRef<HTMLDivElement>(null);
+    const mapRef          = useRef<L.Map | null>(null);
+    const markerGroupRef  = useRef<L.FeatureGroup | null>(null);
+    const circleRef       = useRef<L.Circle | null>(null);
+    const centerMarkerRef = useRef<L.Marker | null>(null);
+    const [mapReady, setMapReady] = useState(false);
+
+    // Prevents geocoding re-run when the parent passes a new formMapFilter object
+    // reference but with identical values (e.g. unrelated Redux dispatch).
+    const filterKey = useMemo(() => JSON.stringify(formMapFilter), [formMapFilter]);
+
+    // ── Map initialization ────────────────────────────────────────────────────
+    // Uses a ref for the container div so there is no shared id="map" that could
+    // conflict with the Map component on the Details page during navigation.
     useEffect(() => {
-        const newMap = L.map("map").setView([50.006, 36.23], 11);
+        if (!containerRef.current) return;
+        const map = L.map(containerRef.current).setView([50.006, 36.23], 11);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(newMap);
-
-        setMap(newMap);
-        return () => newMap.remove();
+            attribution:
+                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+        mapRef.current = map;
+        setMapReady(true);
+        return () => {
+            map.remove();
+            mapRef.current = null;
+            setMapReady(false);
+        };
     }, []);
 
+    // ── Recalculate tile layout after CSS transition ──────────────────────────
     useEffect(() => {
-        if (!map || !listings.length) return;
+        if (!isVisible || !mapRef.current) return;
+        const t = setTimeout(() => mapRef.current?.invalidateSize(), 300);
+        return () => clearTimeout(t);
+    }, [isVisible]);
 
-        const geocodeAndFilter = async () => {
-            const coordsCache = JSON.parse(localStorage.getItem("coordsCache") || "{}");
-            //let centerLat = 50.006, centerLon = 36.23;
-            let centerLat, centerLon;
-            let isDestinationValid = true;
+    // ── Geocode & render markers ──────────────────────────────────────────────
+    useEffect(() => {
+        const map = mapRef.current;
+        if (!mapReady || !map || !listings.length) return;
+
+        let cancelled = false;
+
+        const render = async () => {
+            const filter: typeof formMapFilter = JSON.parse(filterKey);
             const isFilterEmpty =
-                !formMapFilter.destination &&
-                !formMapFilter.listingType &&
-                !formMapFilter.propertyType;
+                !filter.destination && !filter.listingType && !filter.propertyType;
+            const effectiveRange: number = isFilterEmpty ? Infinity : filter.rangeValue;
 
-            // Геокодируем центр по formMapFilter.destination
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${formMapFilter.destination}`);
-                const results = await response.json();
+            // ── Resolve map center ──────────────────────────────────────────
+            let centerLat = 50.006; // default: Kharkiv
+            let centerLon = 36.23;
 
-                if (markerGroupRef.current) {
-                    markerGroupRef.current.clearLayers();
-                }
-                if (circleRef.current) {
-                    map.removeLayer(circleRef.current);
-                }
-                if (centerMarkerRef.current) {
-                    map.removeLayer(centerMarkerRef.current);
-                }
-                if (isFilterEmpty) {
-                    centerLat = 50.006;  // Центр по умолчанию — Харьков
-                    centerLon = 36.23;
-                    formMapFilter.rangeValue = 9999; // показываем всё в большом радиусе
-                }
-                if (results.length > 0) {
-                    centerLat = parseFloat(results[0].lat);
-                    centerLon = parseFloat(results[0].lon);
-                } else {
-                    isDestinationValid = false;
-                    throw new Error("Invalid destination");
-                }
-            } catch (e) {
-                console.warn("Fallback to Kharkiv due to invalid destination");
+            if (!isFilterEmpty && filter.destination) {
+                try {
+                    const r = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(filter.destination)}`
+                    );
+                    const hits = await r.json();
+                    if (hits.length > 0) {
+                        centerLat = parseFloat(hits[0].lat);
+                        centerLon = parseFloat(hits[0].lon);
+                    }
+                } catch { /* stay at Kharkiv default */ }
             }
 
-            map.setView([centerLat, centerLon], 12);
+            if (cancelled) return;
 
-            // маркировка радиуса
-            const radiusCircle = L.circle([centerLat, centerLon], {
-                radius: formMapFilter.rangeValue * 1000,
-                color: '#3b82f6',
-                fillColor: '#93c5fd',
-                fillOpacity: 0.16,
-            }).addTo(map);
-            circleRef.current = radiusCircle;
+            // ── Clear previous overlay ──────────────────────────────────────
+            if (markerGroupRef.current)  { map.removeLayer(markerGroupRef.current);  markerGroupRef.current  = null; }
+            if (circleRef.current)       { map.removeLayer(circleRef.current);        circleRef.current       = null; }
+            if (centerMarkerRef.current) { map.removeLayer(centerMarkerRef.current);  centerMarkerRef.current = null; }
 
-            // маркировка центра
-            const centerMarker = L.marker([centerLat, centerLon], {
-                icon: L.divIcon({
-                    className: 'center-marker',
-                    html: `<div style="background:#3b82f6;width:12px;height:12px;border-radius:50%;border:2px solid white"></div>`,
-                    iconSize: [16, 16],
-                    iconAnchor: [8, 8],
-                }),
-            }).addTo(map);
-            centerMarkerRef.current = centerMarker;
+            map.setView([centerLat, centerLon], isFilterEmpty ? 11 : 12);
 
-            // Вычисление расстояния через Haversine
-            const toRadians = deg => (deg * Math.PI) / 180;
-            const getDistanceKm = (lat1, lon1, lat2, lon2) => {
-                const R = 6371;
-                const dLat = toRadians(lat2 - lat1);
-                const dLon = toRadians(lon2 - lon1);
-                const a =
-                    Math.sin(dLat / 2) ** 2 +
-                    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-                    Math.sin(dLon / 2) ** 2;
-                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            };
+            if (!isFilterEmpty) {
+                circleRef.current = L.circle([centerLat, centerLon], {
+                    radius: effectiveRange * 1000,
+                    color: "#3b82f6",
+                    fillColor: "#93c5fd",
+                    fillOpacity: 0.16,
+                }).addTo(map);
 
-            const markers = [];
+                centerMarkerRef.current = L.marker([centerLat, centerLon], {
+                    icon: L.divIcon({
+                        className: "center-marker",
+                        html: `<div style="background:#3b82f6;width:12px;height:12px;border-radius:50%;border:2px solid white"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8],
+                    }),
+                }).addTo(map);
+            }
+
+            // ── Filter predicate ────────────────────────────────────────────
+            const passes = (listing: any, lat: number, lon: number): boolean =>
+                haversineKm(centerLat, centerLon, lat, lon) <= effectiveRange &&
+                (!filter.listingType  || listing.listingType  === filter.listingType) &&
+                (!filter.propertyType || listing.propertyType === filter.propertyType);
+
+            // ── Phase 1: render all cached addresses immediately ────────────
+            const cache = readCoordsCache();
+            const toGeocode: typeof listings = [];
+            const immediateMarkers: L.Marker[] = [];
 
             for (const listing of listings) {
-                const address = listing.location;
-                if (!address) continue;
-
-                let lat, lon;
-
-                if (coordsCache[address]) {
-                    ({ lat, lon } = coordsCache[address]);
-                } else {
-                    try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}`);
-                        const results = await response.json();
-                        if (results.length > 0) {
-                            lat = results[0].lat;
-                            lon = results[0].lon;
-                            coordsCache[address] = { lat, lon };
-                        } else {
-                            continue;
-                        }
-                    } catch {
-                        continue;
+                if (!listing.location) continue;
+                const hit = cache[listing.location];
+                if (hit) {
+                    if (passes(listing, hit.lat, hit.lon)) {
+                        immediateMarkers.push(buildMarker(listing, hit.lat, hit.lon));
                     }
-                }
-
-                const distance = getDistanceKm(centerLat, centerLon, lat, lon);
-                const insideRange = distance <= formMapFilter.rangeValue;
-
-                const matchesFilter =
-                    (!formMapFilter.listingType || listing.listingType === formMapFilter.listingType) &&
-                    (!formMapFilter.propertyType || listing.propertyType === formMapFilter.propertyType);
-
-                if (insideRange && matchesFilter) {
-                    const marker = L.marker([lat, lon], {
-                        icon: L.divIcon({
-                            className: "custom-marker",
-                            html: `<div class="price-tag">$${listing.price}</div>`,
-                            iconSize: [40, 40],
-                            iconAnchor: [20, 40],
-                        }),
-                    }).addTo(map)
-                        .bindPopup(`
-            <div>
-              <strong>${listing.propertyType}</strong><br/>
-              $${listing.price}<br/>
-              <a href="/details/${listing._id}" id="a">View details</a>
-            </div>
-          `);
-
-                    markers.push(marker);
+                } else {
+                    toGeocode.push(listing);
                 }
             }
 
-            // if (markers.length > 0) {
-            //     //отображает искомые элементы за счет масштаба карты при этом остальные тоже можно увидеть изменив масштаб карты
-            //     const group = L.featureGroup(markers);
-            //     map.fitBounds(group.getBounds());
-            // }
-            if (markers.length > 0) {
-                const group = L.featureGroup(markers).addTo(map);
-                markerGroupRef.current = group;
+            if (immediateMarkers.length > 0) {
+                markerGroupRef.current = L.featureGroup(immediateMarkers).addTo(map);
             }
 
-            localStorage.setItem("coordsCache", JSON.stringify(coordsCache));
+            if (cancelled || !toGeocode.length) return;
 
-            if (!isDestinationValid) {
-                alert("⚠ The location you entered is invalid. Defaulted to Kharkiv.");
+            // ── Phase 2: geocode missing addresses, rate-limited ─────────────
+            let cacheUpdated = false;
+
+            for (const listing of toGeocode) {
+                if (cancelled) break;
+                try {
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(listing.location)}`
+                    );
+                    if (res.ok) {
+                        const hits = await res.json();
+                        if (hits.length > 0) {
+                            const lat = parseFloat(hits[0].lat);
+                            const lon = parseFloat(hits[0].lon);
+                            cache[listing.location] = { lat, lon };
+                            cacheUpdated = true;
+
+                            if (!cancelled && passes(listing, lat, lon)) {
+                                const marker = buildMarker(listing, lat, lon);
+                                if (!markerGroupRef.current) {
+                                    markerGroupRef.current = L.featureGroup([marker]).addTo(map);
+                                } else {
+                                    markerGroupRef.current.addLayer(marker);
+                                }
+                            }
+                        }
+                    }
+                } catch { /* skip address */ }
+
+                // Respect Nominatim rate limit between requests
+                await sleep(GEOCODE_DELAY_MS);
+            }
+
+            if (cacheUpdated) {
+                localStorage.setItem(COORDS_CACHE_KEY, JSON.stringify(cache));
             }
         };
 
-        geocodeAndFilter();
-    }, [map, listings, formMapFilter]);
+        render();
+        return () => { cancelled = true; };
+    }, [mapReady, listings, filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <div className="text-left">
-            <div id="map" style={{ height: "600px", minWidth: "258px", border:"2px solid black",borderRadius:"10px",zIndex:"20" }}></div>
-            {/*{width: "758px"}*/}
+            <div
+                ref={containerRef}
+                style={{
+                    height: "600px",
+                    minWidth: "258px",
+                    border: "2px solid black",
+                    borderRadius: "10px",
+                    zIndex: "20",
+                }}
+            />
         </div>
     );
 };
 
-export default LeafletMaps;
+export default memo(LeafletMaps);
