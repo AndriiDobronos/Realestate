@@ -152,6 +152,7 @@ export default {
         {id:"9",text:"Date of download : "},
         {id:"10",text:"For sale"},
         {id:"11",text:"For rent"},
+        {id:"12",text:"You don't have any listings yet!"},
     ],
     myNotification:[
         {id:"0",text:"select notification to edit"},
@@ -204,6 +205,7 @@ export default {
         {id:"9",text:"Save Changes"},
         {id:"10",text:"Add Agent"},
         {id:"11",text:"Delete agent"},
+        {id:"12",text:"Back to agents list"},
     ],
     agents:[
         {id:"0",text:"Find the most experienced real estate agents in Kharkiv, Ukr"},
