@@ -290,7 +290,7 @@ const Login: React.FC = () => {
     const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
     const navigate = useNavigate();
     const location = useLocation();
-    const { handleAuthSuccess, handleLogout, checkAuth, API_URL } = useAuth();
+    const { handleAuthSuccess, checkAuth, API_URL } = useAuth();
 
     // Если пришли с /register с предзаполненным email — используем его
     const [email, setEmail] = useState<string>(location.state?.prefilledEmail || '');

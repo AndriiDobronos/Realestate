@@ -15,7 +15,7 @@ import { setScrollY } from '../features/scroll/scrollSlice';
 import { useLanguage } from '../context/LanguageContext';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
-import { useAuth } from '../services/useAuth.ts';
+import { useAuth } from '../services/useAuth';
 
 const Home = () => {
     const { language } = useLanguage();
@@ -23,14 +23,15 @@ const Home = () => {
     const location = useLocation();
     const toNewListingScroll = location.state?.scrollToNewListing || 0;
     const scrollY = useSelector((state: RootState) => state.scroll.y);
-    const isRegistration = useSelector((state: RootState) => state.registration. isRegistered);
+    const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
     const userName = useSelector((state: RootState) => state.registration.userName);
     const userId = useSelector((state: RootState) => state.registration.userId);
-    //const authorId = useSelector((state: RootState) => state.registration.userId);
     const filterState = useSelector((state: RootState) => state.filter);
     const filterMapState = useSelector((state: RootState) => state.filterMap);
-    const isLogin = useSelector((state: RootState) => state.auth.isLogin);
     const dispatch = useDispatch();
+    const { handleResetUserData } = useAuth();
+    const isAuthenticated = useSelector((state: RootState) => state.auth.isLogin);
+    const authChecking = useSelector((state: RootState) => state.auth.isChecking);
     const [openFilter, setOpenFilter] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [renderFilter, setRenderFilter] = useState(false);
@@ -87,16 +88,6 @@ const Home = () => {
         localStorage.setItem('scrollPosition', window.scrollY.toString());
     };
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const { checkAuth } = useAuth();
-
-    useEffect(() => {
-        checkAuth().then(({ isAuthenticated, user }) => {
-            if (isAuthenticated && user) {
-                dispatch(setIsRegistration(true));
-                dispatch(setUserName(user.name));
-            }
-        });
-    }, []);
 
     useEffect(() => {
         // Обновляем ширину экрана при первом рендере и при ресайзе
@@ -264,7 +255,6 @@ const Home = () => {
             dispatch(setUserName(userName));
             dispatch(setUserId(userId));
         }
-        checkAuth();
     }, [dispatch]);
 
     // const checkAuth = async () => {
@@ -457,15 +447,6 @@ const Home = () => {
         };
     }, [isRegistration, userName]); // Зависимости от состояния
 
-    const handleResetUserData = async() => {
-        dispatch(resetRegistration());
-        localStorage.removeItem('user');
-        localStorage.removeItem('registrationState');
-        localStorage.removeItem('userImages'); // Добавляем очистку изображений
-        const freshData = await fetchListings();
-        setListings(freshData);
-    };
-
     const scrollToListings = () => {
         document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
     };
@@ -483,7 +464,7 @@ const Home = () => {
     };
 
     const handleResetMapFilter = () => {
-        dispatch(resetMapFilter)
+        dispatch(resetMapFilter())
         setFormMapFilter(initialMapFilter);
     };
 
@@ -672,7 +653,7 @@ const Home = () => {
                                     {/*{Collapse map}*/}
                                 </button>}
                                 <div className="w-full ">
-                                    <LeafletMaps listings={listings} formMapFilter={filterMapState} />
+                                    <LeafletMaps listings={listings} formMapFilter={filterMapState} isVisible={activeRotate} />
                                 </div>
                             </div>
                             </div>}
@@ -716,29 +697,33 @@ const Home = () => {
                     <div id="rightSideScreen" className="lg:w-1/2 flex justify-center flex-col">
                         {/*{container}*/}
                         <div className="container mx-auto text-center py-10">
-                            {(isRegistration && isLogin) ? <h2 className="text-4xl font-bold mb-4 text-yellow-300">{contents.offers[32].text}</h2> :
-                                <h2 className="text-4xl font-bold mb-4">{(!isRegistration && isLogin) ? contents.offers[33].text : contents.offers[40].text}</h2>}
+                            {(isRegistration && isAuthenticated) ? <h2 className="text-4xl font-bold mb-4 text-yellow-300">{contents.offers[32].text}</h2> :
+                                <h2 className="text-4xl font-bold mb-4">{isRegistration ? contents.offers[33].text : contents.offers[40].text}</h2>}
                             {/*{To place your Advertisement, : Register to Post an Advertisement}*/}
-                            {(isRegistration && isLogin) ? <p className="text-lg mb-6 text-yellow-300">{contents.offers[34].text}</p> :
+                            {(isRegistration && isAuthenticated) ? <p className="text-lg mb-6 text-yellow-300">{contents.offers[34].text}</p> :
                                 <p className="text-lg mb-6">{contents.offers[35].text}</p>}
                             {/*{fill out the form with your property details. : Your offer will reach the right audience right away.}*/}
-                            {(isRegistration && isLogin) ? <div className="flex justify-center space-x-6">
-                                <Link to="listings/new/rent" className=" text-gray-700">
+                            {authChecking ? <div className="flex justify-center space-x-6 opacity-0 pointer-events-none">
+                                {/* скелетон на время проверки сессии — избегаем мигания кнопок */}
+                                <button className="w-28 h-10 bg-gray-600 rounded animate-pulse" />
+                                <button className="w-28 h-10 bg-gray-600 rounded animate-pulse" />
+                            </div> : (isRegistration && isAuthenticated) ? <div className="flex justify-center space-x-6">
+                                <Link to="listings/new/rent" className="text-gray-700">
                                     <button>
                                         {contents.offers[5].text} {/*{For rent}*/}
                                     </button>
                                 </Link>
-                                <Link to="listings/new/sale" className=" text-gray-700">
+                                <Link to="listings/new/sale" className="text-gray-700">
                                     <button>
                                         {contents.offers[6].text} {/*{For sale}*/}
                                     </button>
                                 </Link>
                             </div> : <div className="flex justify-center space-x-6">
-                                {(!isRegistration && !isLogin) && <Link to="registration">
-                                    <button> {contents.offers[36].text}</button>
-                                    {/*{Sing Up}*/}
+                                {!isRegistration && <Link to="registration">
+                                    <button>{contents.offers[36].text}</button>
+                                    {/*{Sign Up}*/}
                                 </Link>}
-                                <Link  to="login">
+                                <Link to="login">
                                     <button>{contents.offers[37].text}</button>
                                     {/*{Log In}*/}
                                 </Link>
@@ -785,16 +770,13 @@ const Home = () => {
             {/*<b>{formMapFilter.destination}{formMapFilter.propertyType}{formMapFilter.rangeValue}{formMapFilter.listingType}</b><br/>*/}
             {/*<b>{filterMapState.destination}{filterMapState.propertyType}{filterMapState.rangeValue}{filterMapState.listingType}</b>*/}
 
-            {/*{DELETE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
+            {/*{DELETE before deploy !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
             <div className="container mx-auto text-center py-10">
-                <button onClick={handleResetUserData}>
-                    **** 🔄 Reset ****
+                <button onClick={() => handleResetUserData(setListings)}>
+                    **** 🔄 Reset auth ****
                 </button>
-                {/*<button onClick={handleDeleteListingByUserId} >*/}
-                {/*    Delete listings*/}
-                {/*</button>*/}
             </div>
-            {/*{DELETE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
+            {/*{DELETE before deploy !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
 
 
             {/* Popular Listings Section */}
