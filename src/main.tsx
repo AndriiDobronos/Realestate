@@ -2,14 +2,14 @@
 // import { createRoot } from 'react-dom/client'
 // import './index.scss'
 // import App from './App'
-//
 // createRoot(document.getElementById('root')!).render(
 //   <StrictMode>
 //     <App />
 //   </StrictMode>,
 // )
-import  'react'; //React from
-import { createRoot } from 'react-dom/client'
+
+import  'react';
+import { createRoot } from 'react-dom/client';
 import './index.css'
 import App from './App'
 import { store } from './app/store'
@@ -19,11 +19,10 @@ const container = document.getElementById('root')
 
 if (container) {
     const root = createRoot(container)
-
     root.render(
         <Provider store={store}>
             <App />
-        </Provider>,
+        </Provider>
     )
 } else {
     throw new Error(
