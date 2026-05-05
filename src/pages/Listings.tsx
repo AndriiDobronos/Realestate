@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from "axios";
 import { useParams, Link } from 'react-router-dom';
 import { addListingWithComparison} from '../services/listingService';
@@ -37,7 +37,12 @@ const Listings = () => {
     const [showReminder, setShowReminder] = useState<boolean>(false);
     const [currentNumberPage, setCurrentNumberPage] = useState<number>(1)
     const [activeHint, setActiveHint] = useState<string | null>(null)
-    const [map, setMap] = useState(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const mapRef       = useRef<L.Map | null>(null);
+    const markerRef    = useRef<L.Marker | null>(null);
+    const [mapReady, setMapReady] = useState(false);
+    // Stores edit-mode coords so the map can pan after it initializes
+    const [editInitView, setEditInitView] = useState<{ lat: number; lon: number } | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [next, setNext] = useState(false);
     const [coordinates, setCoordinates] = useState({ lat: 0, lon: 0 });
@@ -84,9 +89,9 @@ const Listings = () => {
                     });
                     setUploadedImages(data[0].image.filter((img: string) => img !== null));
                     setSearchQuery(data[0].location);
-                    const newCoords = {lat: data[0].coordinates.lat, lon: data[0].coordinates.lon};
+                    const newCoords = { lat: data[0].coordinates.lat, lon: data[0].coordinates.lon };
                     setCoordinates(newCoords);
-                    if (map) map.setView([newCoords.lat, newCoords.lon], 13);
+                    setEditInitView(newCoords);
                 } catch (error) {
                     console.error('Error fetching listing:', error);
                 }
@@ -378,31 +383,64 @@ const Listings = () => {
     // }, [apartmentDetails, description, contact, location, price, uploadedImages]);
 
     useEffect(() => {
-        const newMap = L.map('map').setView([50.006, 36.23], 11);
+        if (!containerRef.current) return;
+        const map = L.map(containerRef.current).setView([50.006, 36.23], 11);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(newMap);
-
-        setMap(newMap);
-        return () => newMap.remove();
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+        mapRef.current = map;
+        setMapReady(true);
+        return () => { map.remove(); mapRef.current = null; setMapReady(false); };
     }, []);
 
+    // Recalculate layout when the map panel slides into view
+    useEffect(() => {
+        if (!showMap || !mapRef.current) return;
+        const t = setTimeout(() => mapRef.current?.invalidateSize(), 50);
+        return () => clearTimeout(t);
+    }, [showMap]);
+
+    // Center map on listing location once map is ready (edit mode)
+    useEffect(() => {
+        if (!mapReady || !editInitView || !mapRef.current) return;
+        mapRef.current.setView([editInitView.lat, editInitView.lon], 13);
+    }, [mapReady, editInitView]);
+
     const handleSearch = async () => {
-        if (!searchQuery) return;
+        const map = mapRef.current;
+        if (!searchQuery || !map) return;
 
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}`);
-        const results = await response.json();
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`
+            );
+            const results = await response.json();
 
-        if (results.length > 0 && map) {
-            const { lat, lon } = results[0];
-            map.setView([lat, lon], 13);
-            L.marker([lat, lon]).addTo(map).bindPopup(searchQuery).openPopup();
-            setLocation(searchQuery);
-            setPrompt([`${contents.listings[35].text}`,`text-green-700`]);
-            setCoordinates({ lat, lon });
-            setShowMap(true);
-        } else {
-            setPrompt([`${contents.listings[36].text}`,`text-red-700`]);
+            if (results.length > 0) {
+                const lat = parseFloat(results[0].lat);
+                const lon = parseFloat(results[0].lon);
+
+                // Remove previous validation marker before adding a new one
+                if (markerRef.current) map.removeLayer(markerRef.current);
+                markerRef.current = L.marker([lat, lon]).addTo(map).bindPopup(searchQuery).openPopup();
+
+                map.setView([lat, lon], 13);
+                setLocation(searchQuery);
+                setCoordinates({ lat, lon });
+                setShowMap(true);
+                setPrompt([`${contents.listings[35].text}`, `text-green-700`]);
+
+                // Persist to coordsCache so LeafletMaps on Home reuses these coords
+                try {
+                    const cache = JSON.parse(localStorage.getItem("coordsCache") || "{}");
+                    cache[searchQuery] = { lat, lon };
+                    localStorage.setItem("coordsCache", JSON.stringify(cache));
+                } catch { /* non-critical */ }
+            } else {
+                setPrompt([`${contents.listings[36].text}`, `text-red-700`]);
+            }
+        } catch {
+            setPrompt([`${contents.listings[36].text}`, `text-red-700`]);
         }
     };
 
@@ -614,7 +652,7 @@ const Listings = () => {
                         </div>}
                     </ol>
 
-                    <div id="map" style={(showMap && currentNumberPage === 2) ?
+                    <div ref={containerRef} style={(showMap && currentNumberPage === 2) ?
                         {opacity:"1", zIndex:"10",position:"absolute", height: "406px", width: "60%", border: "2px solid black",left:"20%",top:"116px",borderRadius:"10px" } :
                         {opacity:"0", zIndex:"-1",position:"absolute", height: "406px", width: "60%", border: "2px solid black",left:"20%",top:"116px"}
                     }></div>
