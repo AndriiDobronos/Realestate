@@ -127,7 +127,6 @@ const Agents = () => {
                     Create new Agent
                 </Link>}
             </div>
-           <p>{userName}*</p>
             <Footer  color={'#C0B283'} />
         </div>
     )
