@@ -172,7 +172,34 @@ const Details = () => {
         }
     };
 
-    if (loading) return <div className="mt-[64px]">{contents.details[0].text}</div>; // {Loading...}
+    if (loading) return (
+        <div className="mx-auto bg-gray-200 pt-20 xl:px-6 px-3 pb-6 min-h-screen">
+            <div className="mx-auto bg-white rounded-lg shadow-md xl:p-6 p-3">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:gap-8 gap-4 w-full animate-pulse">
+                    {/* left: carousel placeholder + info lines */}
+                    <div>
+                        <div className="bg-gray-300 rounded-lg h-64 sm:h-80 w-full mb-4" />
+                        <div className="pl-6 pr-6 pt-2 pb-2 space-y-3">
+                            <div className="h-4 bg-gray-300 rounded w-3/4" />
+                            <div className="h-4 bg-gray-300 rounded w-1/2" />
+                            <div className="h-4 bg-gray-300 rounded w-2/3" />
+                            <div className="h-4 bg-gray-300 rounded w-3/4" />
+                            <div className="h-4 bg-gray-300 rounded w-1/2" />
+                            <div className="h-4 bg-gray-300 rounded w-2/3" />
+                            <div className="h-4 bg-gray-300 rounded w-1/3" />
+                            <div className="h-4 bg-gray-300 rounded w-3/5" />
+                            <div className="flex justify-around mt-4 gap-4">
+                                <div className="h-10 bg-gray-300 rounded w-32" />
+                                <div className="h-10 bg-gray-300 rounded w-32" />
+                            </div>
+                        </div>
+                    </div>
+                    {/* right: map placeholder */}
+                    <div className="bg-gray-300 rounded min-h-[600px] w-full" />
+                </div>
+            </div>
+        </div>
+    );
     if (error) return <div className="mt-[64px]">{error}</div>;
     if (!listing) return <div className="mt-[64px]">{contents.details[1].text}</div>; // {Listing not found}
 

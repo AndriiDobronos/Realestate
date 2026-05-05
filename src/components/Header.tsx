@@ -10,7 +10,9 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import Burger from "./Burger";
-import {resetAuthProperty, setAuthProperty} from "../features/auth/authSlice"
+import {resetAuthProperty, setAuthProperty, setAuthChecking} from "../features/auth/authSlice"
+import { useAuth } from '../services/useAuth'
+import {setIsRegistration, setUserName, setUserId} from '../features/registration/registrationSlice'
 
 const Header = () => {
     const { language } = useLanguage();
@@ -23,12 +25,21 @@ const Header = () => {
     const [activeHint, setActiveHint] = useState(false);
     const [mobileMenu, setMobileMenu] = useState(false);
     const [widthScreen, setWidthScreen] = useState(window.innerWidth >= 900);
-    const [isAuth, setIsAuth] = useState(true);
-    const [userName, setUserName] = useState<string>("");
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const isAuth = useSelector((state: RootState) => state.auth.isLogin);
+    const { checkAuth } = useAuth();
 
     useEffect(() => {
-        checkAuth();
+        checkAuth().then(({ isAuthenticated: serverAuth, user }) => {
+            if (serverAuth && user) {
+                dispatch(setAuthProperty(true));
+                dispatch(setIsRegistration(true));
+                dispatch(setUserName(user.name));
+                dispatch(setUserId(user.id));
+            } else {
+                dispatch(resetAuthProperty());
+            }
+            dispatch(setAuthChecking(false));
+        });
         const handleResize = () => {
             setWidthScreen(window.innerWidth >= 900);
         }
@@ -36,29 +47,6 @@ const Header = () => {
         window.addEventListener('resize', handleResize);
         return ()=> window.removeEventListener('resize', handleResize);
     },[]);
-
-    const checkAuth = async () => {
-        try {
-            const response = await fetch(`${API_URL}/check-auth`, {
-            //const response = await fetch(`${API_URL}/session`, {
-                method: "GET",
-                credentials: "include",
-            });
-            const data = await response.json();
-            if (data.isAuthenticated) {
-                setIsAuth(true);
-                dispatch(setAuthProperty(true));
-                //setName(`${data.isAuthenticated}`);
-                //setName(data.expires)
-                setUserName(data.user);
-            }else{
-                setIsAuth(false);
-                dispatch(resetAuthProperty());
-            }
-        } catch (err) {
-            console.error('Auth check error:', err);
-        }
-    };
 
     return (
         <header className="bg-blue-600 text-white p-4 w-full fixed z-[99]" style={{boxShadow:"inset 3px 3px 12px rgba(0, 0, 0, 0.6)"}}>
@@ -125,7 +113,7 @@ const Header = () => {
                                     before:border-8 before:border-transparent before:border-b-gray-200"
                             >
                                 <p className="text-2xl" style={{textShadow:"2px 1px 2px rgba(0, 0, 0, 0.6)"}}>{contents.header[6].text}: {/*{My profile}*/}</p>
-                                <p className="text-xl mb-4 text-blue-600">{userName}</p>
+                                <p className="text-xl mb-4 text-blue-600">{ownerName}</p>
                                 <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myListings">{contents.header[7].text} {/*{Edit my Listings}*/}</Link></button>
                                 <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myComments">{contents.header[8].text} {/*{Edit my Comments}*/}</Link></button>
                                 <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myNotification">{contents.header[12].text} {/*{Edit my Notification}*/}</Link></button>
@@ -148,7 +136,7 @@ const Header = () => {
                         </li>
                         <li><Link to="agents" className="hover:underline text-yellow-200 hover:text-yellow-400">{contents.header[11].text}</Link></li>
                         {/*{Agents}*/}
-                        {(ownerName === 'admin') && <li><Link to="advertising" className="hover:underline text-yellow-200 hover:text-yellow-400">Video</Link></li>}
+                        {/* {(ownerName === 'admin') && <li><Link to="advertising" className="hover:underline text-yellow-200 hover:text-yellow-400">Video</Link></li>} */}
                         <li><Link to="services" className="hover:underline text-yellow-200 hover:text-yellow-400">{contents.header[13].text}</Link></li>
                         {/*{Services}*/}
                         <LanguageSwitcher />
@@ -207,7 +195,7 @@ const Header = () => {
                                     before:border-8 before:border-transparent before:border-b-gray-200"
                         >
                             <p className="text-2xl mb-6" style={{textShadow:"2px 1px 2px rgba(0, 0, 0, 0.6)"}}>{contents.header[6].text} {/*{My profile}*/}</p>
-                            <p className="text-xl mb-4 text-blue-600">{userName}</p>
+                            <p className="text-xl mb-4 text-blue-600">{ownerName}</p>
                             <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myListings">{contents.header[7].text} {/*{Edit my Listings}*/}</Link></button>
                             <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myComments">{contents.header[8].text} {/*{Edit my Comments}*/}</Link></button>
                             <button className="bg-gray-50 mb-6 w-[88%]"><Link to="myNotification">{contents.header[12].text} {/*{Edit my Notification}*/}</Link></button>
@@ -230,9 +218,9 @@ const Header = () => {
                     <li><Link to="agents" className="hover:underline text-yellow-200 hover:text-yellow-400" onClick={() => setMobileMenu(false)}>
                         {contents.header[11].text}
                     </Link></li>
-                    {(ownerName === 'admin') && <li><Link to="advertising" className="hover:underline text-yellow-200 hover:text-yellow-400" onClick={() => setMobileMenu(false)}>
+                    {/* {(ownerName === 'admin') && <li><Link to="advertising" className="hover:underline text-yellow-200 hover:text-yellow-400" onClick={() => setMobileMenu(false)}>
                         Video
-                    </Link></li>}
+                    </Link></li>} */}
                     <li><Link to="services" className="hover:underline text-yellow-200 hover:text-yellow-400" onClick={() => setMobileMenu(false)}>
                         {contents.header[13].text}
                     </Link></li>
