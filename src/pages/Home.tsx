@@ -11,6 +11,7 @@ import {fetchListings} from "../services/ListingService";
 import LoadingSkeleton from "../../src/components/LoadingSkeleton";
 import Footer from "../components/Footer";
 import LeafletMaps from "../components/LeafletMaps";
+import ListingCard from "../components/ListingCard";
 import { setScrollY } from '../features/scroll/scrollSlice';
 import { useLanguage } from '../context/LanguageContext';
 import allEnTexts from '../contents/allEnTexts';
@@ -739,22 +740,25 @@ const Home = () => {
                                 <div className="flex whitespace-nowrap animate-marquee">
                                     {[...Array(repeatCount)].map((_, i) => (
                                         <p key={i} className="mx-4 text-lg font-bold text-white">
-                                            {/*{runningString}*/}{featuredAd.adsString}{errorNotification}
+                                            {featuredAd.adsString || (language === "en" ? "Your services can be advertised here" : "На цьому місці могла б бути ваша реклама")}{errorNotification}
                                         </p>
                                     ))}
                                 </div>
                             </div>
 
-                            <video
-                                //width="600"
-                                //height="400"
-                                controls
-                                autoPlay
-                                muted
-                                loop
-                                src={featuredAd.videoUrl[0]}
-                                //src={'https://res.cloudinary.com/dndnmla09/video/upload/v1750064751/wv1ypupvrx0osetzjmox.mp4'}
-                            />
+                            {featuredAd.videoUrl[0] ? (
+                                <video controls autoPlay muted loop src={featuredAd.videoUrl[0]} />
+                            ) : (
+                                <div className="w-full bg-gray-800 rounded-lg flex flex-col items-center justify-center"
+                                     style={{ aspectRatio: "16/9" }}>
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="52px" viewBox="0 -960 960 960" width="52px" fill="#4b5563">
+                                        <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h480q33 0 56.5 23.5T720-720v180l160-160v440L720-420v180q0 33-23.5 56.5T640-160H160Zm0-80h480v-480H160v480Zm0 0v-480 480Z"/>
+                                    </svg>
+                                    <p className="text-gray-500 mt-3 text-sm">
+                                        {language === "en" ? "Loading video…" : "Завантаження відео…"}
+                                    </p>
+                                </div>
+                            )}
 
                         </section>
 
@@ -788,40 +792,12 @@ const Home = () => {
                     {loading ? <LoadingSkeleton /> : <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
                         {((filterState.novelty === "newToOld") ? [...filteredListings].reverse() : filteredListings).map((listing: any) => (
-                            <li key={listing._id} className="text-left  border-gray-400 border-2 p-2 rounded-md shadow-xl flex flex-col justify-between">
-                                <div>
-                                    <p className="text-gray-600 font-bold">&#x25FC; {contents.cards[0].text} {listing.apartmentDetails}</p>
-                                    {/*{Property : }*/}
-                                    <p className="text-gray-600">&#x25FC; {contents.cards[1].text} {listing.description}.</p>
-                                    {/*{Description of property : }*/}
-                                    {(listing.listingType === "rent") ? <p className="text-gray-600">&#x25FC; {contents.cards[2].text} ${listing.price}.</p> :
-                                        <p className="text-gray-600">&#x25FC; {contents.cards[3].text} ${listing.price}.</p>}
-                                    {/*{ Monthly rental property : Selling price : }*/}
-                                    <p className="text-gray-600">&#x25FC; {contents.cards[4].text} {listing.contact}.</p>
-                                    {/*{Owner's contact data : }*/}
-                                    <Link to={`leafletMaps`}>
-                                        <p className="text-gray-600">&#x25FC; {contents.cards[5].text} {listing?.location}.</p>
-                                        {/*{Location : }*/}
-                                    </Link>
-                                    <p className="text-gray-600">&#x25FC; {contents.cards[6].text} {listing.propertyType}.</p>
-                                    {/*{Property type : }*/}
-                                    <p className="text-gray-600">&#x25FC; {contents.cards[7].text} { new Date(+listing.date).toLocaleString()}.</p>
-                                    {/*{Time of download : }*/}
-                                </div>
-
-                                <Link to={`/details/${listing._id}`} className="flex relative " state={{ fromHomeScroll: scrollY }}>
-                                    <div style={{position: "absolute",zIndex:"10",left:"30px", top:"40px",opacity:"0.6",transform: "rotateZ(-45deg)"}}>
-                                        {listing.listingType === 'sale' ? <p style={{fontSize:"40px",color:"green"}}>{contents.cards[8].text}</p> :
-                                            <p style={{fontSize:"40px",color:"green"}}>{contents.cards[9].text}</p>}
-                                    </div>
-                                    <div onClick={handleSaveScrollPosition} className="w-full h-[300px] bg-white overflow-hidden relative">
-                                        <img src={listing.image.find(item => item !== null) || null} alt={`Property`}
-                                             //className="w-full h-full object-cover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                                             className="w-full h-full object-cover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 ease-in-out hover:scale-110"
-                                        />
-                                    </div>
-                                </Link>
-                            </li>
+                            <ListingCard
+                                key={listing._id}
+                                listing={listing}
+                                scrollY={scrollY}
+                                onSaveScroll={handleSaveScrollPosition}
+                            />
                         ))}
 
                     </ul>}

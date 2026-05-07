@@ -82,7 +82,7 @@ const Map: React.FC<MapProps> = ({ location }) => {
     return (
         <div
             ref={containerRef}
-            style={{ height: "100%", width: "100%", zIndex: "10", border: "2px solid black" }}
+            style={{ height: "100%", width: "100%", zIndex: "10", border: "0px solid transparent" }}
         />
     );
 };
