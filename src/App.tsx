@@ -21,7 +21,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import Notification from "./pages/Notification";
 import MyNotification from "./components/MyNotification";
 import Agreement from "./pages/Agreement";
-import CostCalculation from "./components/CostCalculation";
 import RealEstateEstimator from "./components/RealEstateEstimator";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
@@ -53,8 +52,7 @@ function App() {
                         <Route path="myNotification" element={<MyNotification  />} />
                         <Route path="notification" element={<Notification />} />
                         <Route path="agreement" element={<Agreement  />} />
-                        <Route path="/notification/edit/:notificationId?" element={<Notification />} />
-                        <Route path="costCalculation" element={<CostCalculation  />} />
+                        <Route path="/notification/edit/:notificationId?" element={<Notification />} />    
                         <Route path="realEstateEstimator" element={<RealEstateEstimator  />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password"  element={<ResetPassword />} />
