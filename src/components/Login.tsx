@@ -261,7 +261,7 @@
 //******************************************************************************
 
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RootState } from '../app/store';
 import { useLanguage } from '../context/LanguageContext';
@@ -290,22 +290,18 @@ const Login: React.FC = () => {
     const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
     const navigate = useNavigate();
     const location = useLocation();
-    const { handleAuthSuccess, checkAuth, API_URL } = useAuth();
+    const { handleAuthSuccess, API_URL } = useAuth();
 
     // Если пришли с /register с предзаполненным email — используем его
     const [email, setEmail] = useState<string>(location.state?.prefilledEmail || '');
     const [password, setPassword] = useState('');
     const [status, setStatus] = useState<LoginStatus>('idle');
     const [errorMessage, setErrorMessage] = useState('');
-    const [suggestedMethod, setSuggestedMethod] = useState<string>(
-        location.state?.suggestedMethod || ''
-    );
-
-    // ─── Если уже авторизован — редирект или показ кнопки "На головну"
+// ─── Если уже авторизован — редирект или показ кнопки "На головну"
     useEffect(() => {
         // Подсказка метода входа пришла из RegistrationForm
         if (location.state?.suggestedMethod === 'google') {
-            setErrorMessage(contents.loginErrors?.suggestGoogleLogin || 'Будь ласка, увійдіть через Google.');
+            setErrorMessage(contents.registrationErrors?.registeredWithGoogle || 'Будь ласка, увійдіть через Google.');
             setStatus('wrong_method');
         }
     }, [location]);
@@ -341,7 +337,6 @@ const Login: React.FC = () => {
                 handleAuthSuccess(data);
             } else if (response.status === 409) {
                 // Пользователь зарегистрирован другим методом (например Google)
-                setSuggestedMethod(data.authMethod);
                 setErrorMessage(
                     data.authMethod === 'google'
                         ? 'Цей email зареєстровано через Google. Скористайтесь кнопкою входу нижче.'
@@ -381,7 +376,6 @@ const Login: React.FC = () => {
             } else if (response.status === 409) {
                 // Email зарегистрирован через пароль
                 setErrorMessage('Цей email зареєстровано з паролем. Увійдіть через форму вище.');
-                setSuggestedMethod('password');
                 setStatus('wrong_method');
             } else {
                 setErrorMessage(data.message || 'Google authentication failed');
@@ -401,7 +395,6 @@ const Login: React.FC = () => {
     const resetForm = () => {
         setStatus('idle');
         setErrorMessage('');
-        setSuggestedMethod('');
     };
 
     const isLoading = status === 'loading';
