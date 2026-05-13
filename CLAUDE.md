@@ -69,9 +69,9 @@ Sessions are cookie-based (`credentials: 'include'` on all API calls). Registrat
 
 `src/context/LanguageContext.tsx` — provides `language` (`'uk' | 'en' | 'ru'`) and `setLanguage` via `useLanguage()` hook. Default language is `'uk'`.
 
-UI text is stored in two JS objects:
-- `src/contents/allUaTexts.js`
-- `src/contents/allEnTexts.js`
+UI text is stored in two TypeScript objects:
+- `src/contents/allUaTexts.ts` — Ukrainian (source of truth)
+- `src/contents/allEnTexts.ts` — English translations
 
 Pattern used throughout components:
 ```ts
@@ -99,7 +99,43 @@ Videos → `VideoUploader` component (same Cloudinary pattern).
 
 ### Styling
 
-Tailwind CSS (v3) + SCSS (`src/components/footer.style.scss`) + plain CSS per component. Some components inject styles via `document.createElement('style')` at module level (e.g. `ImageUpLoader.tsx`).
+Tailwind CSS (v3) + plain CSS per component. Some components inject styles via `document.createElement('style')` at module level (e.g. `ImageUpLoader.tsx`).
+
+> **Note:** `index.css` contains a global `button { }` rule (lines 66–84) that sets `background-color: #1a1a1a` and `box-shadow: inset ...` on all buttons. Override it with Tailwind `!`-prefix utilities (`!bg-[color]`, `!shadow-none`, `!border-0`) on any button that needs custom styling.
+
+## i18n Rule — mandatory for every component and page
+
+**All visible UI text must be localised.** No hardcoded strings in JSX or logic.
+
+### Where to put text
+
+| File | Content |
+|---|---|
+| `src/contents/allUaTexts.ts` | Ukrainian — **source of truth**, written first |
+| `src/contents/allEnTexts.ts` | English translation of the same keys |
+
+Both files export a plain object. Text is grouped by feature (e.g. `login`, `footer`, `services`). Inside each group items are indexed arrays `{id, text, href?}` or named object keys (e.g. `loginErrors`, `registrationErrors`).
+
+### Rules
+
+1. **Ukrainian first.** Write the Ukrainian text in `allUaTexts.ts` first, then add the English translation to `allEnTexts.ts`.
+2. **No hardcoded strings in components.** Every user-visible string — labels, placeholders, error messages, button text, section headings, tooltips — must come from `contents.*`.
+3. **Exceptions** (may stay hardcoded): brand names (`My Dream House`), universal placeholders (`name@example.com`, `••••••••`), numeric literals (`24/7`, `98%`), icon `aria-label` values that duplicate a visible label.
+4. **Access pattern** — use the standard hook at the top of every component:
+   ```ts
+   const { language } = useLanguage();
+   const contents = language === 'en' ? allEnTexts : allUaTexts;
+   ```
+5. **Adding new text.** When creating or modifying a component, always add new entries to **both** files in the same PR. Leave no key missing in either file.
+6. **Error messages** are not exempt. Even dynamic error strings set via `setErrorMessage(...)` must reference `contents.*` (e.g. `contents.loginErrors.wrongPassword`), not hardcoded Ukrainian or English literals.
+7. **Array index naming.** Prefer named object keys (`loginErrors.wrongPassword`) over high array indices (`login[47]`) for readability when adding new groups of strings.
+
+### Checklist before committing a component
+
+- [ ] Zero hardcoded Ukrainian strings in JSX and handlers
+- [ ] Zero hardcoded English strings that should be translated
+- [ ] Matching keys exist in both `allUaTexts.ts` and `allEnTexts.ts`
+- [ ] Component uses `useLanguage()` + `const contents = language === 'en' ? allEnTexts : allUaTexts`
 
 ## Rules for interacting with Git via Claude Code
 ### Verification commands (run after changes)

@@ -178,7 +178,7 @@ const styles = `
         padding: 1rem;
         /* min-height: 100px; */ 
         width: 180px;  /* Фиксированная ширина */
-        height: 180px;
+        height: 160px;
         display: flex;
         align-items: center;
         justify-content: center;

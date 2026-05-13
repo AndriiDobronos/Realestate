@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { RootState } from "../app/store";
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -37,7 +38,41 @@ const MyListings = () => {
     const userId = useSelector((state: RootState) => state.registration.userId);
     const [listings, setListings] = useState<MyListing[]>([]);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
     const isAdmin = userName === 'admin';
+
+    const deleteImagesFromCloudinary = async (images: string[]) => {
+        await Promise.all(
+            images.filter(Boolean).map(async (url) => {
+                const publicId = url.split('/').pop()!.split('.')[0];
+                const { data } = await axios.post(`${API_URL}/generate-signature`, {
+                    public_id: publicId,
+                    timestamp: Math.floor(Date.now() / 1000),
+                });
+                return axios.post(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`, {
+                    public_id: publicId,
+                    api_key: data.api_key,
+                    timestamp: data.timestamp,
+                    signature: data.signature,
+                });
+            })
+        );
+    };
+
+    const handleDelete = async (id: string, images: string[]) => {
+        if (!window.confirm(m[16].text + '?')) return;
+        try {
+            await deleteImagesFromCloudinary(images);
+            const res = await fetch(`${API_URL}/api/listing/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+            setListings(prev => prev.filter(l => l._id !== id));
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     useEffect(() => {
         const url = isAdmin
@@ -210,15 +245,24 @@ const MyListings = () => {
                                             <span>{formattedDate}</span>
                                         </div>
 
-                                        {/* Edit button */}
-                                        <Link to={`/listings/edit/${listing._id}`}>
+                                        {/* Edit / Delete buttons */}
+                                        <div className="flex gap-2 mt-1">
+                                            <Link to={`/listings/edit/${listing._id}`} className="flex-1">
+                                                <button
+                                                    type="button"
+                                                    className="!w-full py-2 rounded-xl !bg-blue-500 hover:!bg-blue-600 active:!bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 !shadow-none !border-0"
+                                                >
+                                                    {m[15].text}
+                                                </button>
+                                            </Link>
                                             <button
                                                 type="button"
-                                                className="!w-full mt-1 py-2 rounded-xl !bg-blue-500 hover:!bg-blue-600 active:!bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 !shadow-none !border-0"
+                                                onClick={() => handleDelete(listing._id, listing.image)}
+                                                className="flex-1 py-2 rounded-xl !bg-red-500 hover:!bg-red-600 active:!bg-red-700 text-white text-sm font-semibold transition-colors duration-200 !shadow-none !border-0"
                                             >
-                                                {m[15].text}
+                                                {m[16].text}
                                             </button>
-                                        </Link>
+                                        </div>
                                     </div>
                                 </li>
                             );
