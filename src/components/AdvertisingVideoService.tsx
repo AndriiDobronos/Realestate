@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import VideoUploader from "./VideoUploader";
+import { useLanguage } from '../context/LanguageContext';
+import allEnTexts from '../contents/allEnTexts';
+import allUaTexts from '../contents/allUaTexts';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
 
@@ -14,6 +17,8 @@ interface AdVideo {
 }
 
 const AdvertisingVideoService = () => {
+    const { language } = useLanguage();
+    const t = (language === 'en' ? allEnTexts : allUaTexts).advertisingVideo;
     const [message, setMessage] = useState('');
     const [success, setSuccess] = useState('');
     const [adsString, setAdsString] = useState('');
@@ -52,7 +57,7 @@ const AdvertisingVideoService = () => {
                 { adsString, videoUrl, publicId, ownerName },
                 { withCredentials: true, headers: { 'Content-Type': 'application/json' } }
             );
-            setSuccess('The video was uploaded successfully.');
+            setSuccess(t.successUpload);
             setAdsString('');
             setVideoUrl('');
             setPublicId('');
@@ -60,7 +65,7 @@ const AdvertisingVideoService = () => {
             await fetchAds();
         } catch (err) {
             console.error('Error saving ad:', err);
-            setMessage('Failed to save the ad. Please try again.');
+            setMessage(t.failedSave);
         } finally {
             setLoading(false);
         }
@@ -98,36 +103,36 @@ const AdvertisingVideoService = () => {
             const videoToDelete = Array.isArray(ad.videoUrl) ? ad.videoUrl[0] : ad.videoUrl;
             await deleteVideoFromCloudinary(videoToDelete);
             const response = await axios.delete(`${API_URL}/api/videos/${ad.publicId}`);
-            setMessage(`Success: ${response.data.message}`);
+            setMessage(`${t.successPrefix} ${response.data.message}`);
             await fetchAds();
         } catch (error: any) {
-            setMessage(`Failed to delete ad: ${error.response?.data?.error || error.message}`);
+            setMessage(`${t.failedDelete} ${error.response?.data?.error || error.message}`);
         }
     };
 
     const makeFeatured = async (adId: string) => {
         try {
             await axios.post(`${API_URL}/api/videos/set-featured`, { adId });
-            setMessage('The ad is now posted on the Home page!');
+            setMessage(t.successFeatured);
             await fetchAds();
         } catch (error: any) {
-            setMessage(`Failed to set featured: ${error.response?.data?.error || error.message}`);
+            setMessage(`${t.failedFeatured} ${error.response?.data?.error || error.message}`);
         }
     };
 
     const makeChangesAdsString = async (adId: string) => {
         const modifiedString = changeableAdsStrings[adId];
         if (!modifiedString?.trim()) {
-            setMessage('Please enter a new ad description before saving.');
+            setMessage(t.enterDescription);
             return;
         }
         try {
             await axios.post(`${API_URL}/api/videos/modified-string`, { adId, modifiedString });
-            setMessage('Ad description updated successfully!');
+            setMessage(t.successUpdated);
             setChangeableAdsStrings(prev => ({ ...prev, [adId]: '' }));
             await fetchAds();
         } catch (error: any) {
-            setMessage(`Failed to update: ${error.response?.data?.error || error.message}`);
+            setMessage(`${t.failedUpdate} ${error.response?.data?.error || error.message}`);
         }
     };
 
@@ -137,18 +142,19 @@ const AdvertisingVideoService = () => {
     const labelCls = "text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1";
 
     return (
+        <div className="min-h-screen bg-[#F8FAFC]">
         <div className="mx-auto max-w-2xl flex flex-col gap-5 pt-20 pb-10 px-4">
 
             {/* ── Upload section ──────────────────────────────── */}
             <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Advertising Video Manager</h2>
+                <h2 className="text-xl font-bold text-gray-800">{t.title}</h2>
                 <hr className="border-gray-100" />
 
                 <div className="flex flex-col gap-1">
-                    <label className={labelCls}>Ad description</label>
+                    <label className={labelCls}>{t.labelDescription}</label>
                     <input
                         type="text"
-                        placeholder="Enter ad description"
+                        placeholder={t.placeholderDescription}
                         value={adsString}
                         onChange={e => setAdsString(e.target.value)}
                         className={inputCls}
@@ -156,10 +162,10 @@ const AdvertisingVideoService = () => {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                    <label className={labelCls}>Owner's name</label>
+                    <label className={labelCls}>{t.labelOwner}</label>
                     <input
                         type="text"
-                        placeholder="Enter owner's name"
+                        placeholder={t.placeholderOwner}
                         value={ownerName}
                         onChange={e => setOwnerName(e.target.value)}
                         className={inputCls}
@@ -175,7 +181,7 @@ const AdvertisingVideoService = () => {
 
                 {videoUrl && (
                     <div className="flex flex-col gap-1">
-                        <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Video ready to save</p>
+                        <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">{t.videoReady}</p>
                         <video src={videoUrl} controls muted className="w-full rounded-xl" style={{ maxHeight: '200px' }} />
                     </div>
                 )}
@@ -185,7 +191,7 @@ const AdvertisingVideoService = () => {
                     disabled={loading || !videoUrl || !adsString || !ownerName}
                     className="w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Saving…' : 'Save'}
+                    {loading ? t.saving : t.save}
                 </button>
 
                 {success && <p className="text-sm font-semibold text-green-600">{success}</p>}
@@ -198,11 +204,11 @@ const AdvertisingVideoService = () => {
 
             {/* ── Saved videos ─────────────────────────────────── */}
             <div className="flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-gray-700 px-1">Saved Videos</h3>
+                <h3 className="text-lg font-bold text-gray-700 px-1">{t.savedVideos}</h3>
 
                 {ads.length === 0 ? (
                     <div className="bg-white rounded-2xl shadow-md p-6 text-center text-gray-400 text-sm">
-                        No videos saved yet.
+                        {t.noVideos}
                     </div>
                 ) : (
                     ads.map(ad => (
@@ -211,7 +217,7 @@ const AdvertisingVideoService = () => {
                             {/* header */}
                             <div>
                                 <p className="font-semibold text-gray-800">{ad.adsString}</p>
-                                <p className="text-xs text-gray-400 mt-0.5">Owner: {ad.ownerName}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{t.ownerPrefix} {ad.ownerName}</p>
                             </div>
                             <hr className="border-gray-100" />
 
@@ -219,7 +225,7 @@ const AdvertisingVideoService = () => {
                             <div className="flex gap-2">
                                 <input
                                     type="text"
-                                    placeholder={`Edit: "${ad.adsString}"`}
+                                    placeholder={`${t.editPrefix} "${ad.adsString}"`}
                                     value={changeableAdsStrings[ad._id] ?? ''}
                                     onChange={e =>
                                         setChangeableAdsStrings(prev => ({ ...prev, [ad._id]: e.target.value }))
@@ -231,7 +237,7 @@ const AdvertisingVideoService = () => {
                                     disabled={!changeableAdsStrings[ad._id]?.trim()}
                                     className="px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white text-sm font-semibold transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                                 >
-                                    Save changes
+                                    {t.saveChanges}
                                 </button>
                             </div>
 
@@ -250,13 +256,13 @@ const AdvertisingVideoService = () => {
                                     onClick={() => makeFeatured(ad._id)}
                                     className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 text-white text-sm font-semibold transition-colors duration-200"
                                 >
-                                    Display on Home page
+                                    {t.displayOnHome}
                                 </button>
                                 <button
                                     onClick={() => handleDelete(ad)}
                                     className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-sm font-semibold transition-colors duration-200"
                                 >
-                                    Delete
+                                    {t.delete}
                                 </button>
                             </div>
 
@@ -270,6 +276,7 @@ const AdvertisingVideoService = () => {
                 )}
             </div>
 
+        </div>
         </div>
     );
 };

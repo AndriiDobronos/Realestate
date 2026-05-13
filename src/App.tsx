@@ -24,6 +24,7 @@ import Agreement from "./pages/Agreement";
 import RealEstateEstimator from "./components/RealEstateEstimator";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
+import PromotionYourListing from './pages/PromotionYourListing';
 
 function App() {
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -47,7 +48,7 @@ function App() {
                         <Route path="advertising" element={<AdvertisingVideoService  />} />
                         <Route path="login" element={<Login />} />
                         <Route path="details/:id" element={<Details />} />
-                        <Route path="leafletMaps" element={<LeafletMaps listings formMapFilter />} />
+                        <Route path="leafletMaps" element={<LeafletMaps listings formMapFilter isVisible/>} />
                         <Route path="myListings" element={<MyListings  />} />
                         <Route path="myNotification" element={<MyNotification  />} />
                         <Route path="notification" element={<Notification />} />
@@ -56,6 +57,7 @@ function App() {
                         <Route path="realEstateEstimator" element={<RealEstateEstimator  />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password"  element={<ResetPassword />} />
+                        <Route path="promotionYourListing" element={<PromotionYourListing />} />
                     </Routes>
                 </BrowserRouter>
             </LanguageProvider>
