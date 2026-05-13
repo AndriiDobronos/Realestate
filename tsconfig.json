@@ -1,24 +1,8 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ],
-  "include": ["src"]
+  // "files": [],
+  // "references": [
+  //   { "path": "./tsconfig.app.json" },
+  //   { "path": "./tsconfig.node.json" }
+  // ],
+  // "include": ["src"]
 }
-
-
-//{
-//  "compilerOptions": {
-//    "moduleResolution": "node",
-//    // Укажите Node.js модульную систему
-//    "baseUrl": "./",
-//    // Базовая директория проекта
-//    "paths": {
-//      "*": [
-//        "node_modules/*"
-//      ]
-//      // Укажите пути для поиска модулей
-//    }
-//  }
-//}
