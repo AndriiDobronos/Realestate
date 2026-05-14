@@ -144,10 +144,7 @@ const MyComments = () => {
     if (comments.length === 0 || listings.length === 0) {
         return (
             <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
-                <p
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
-                    style={{ textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)" }}
-                >
+                <p className="text-2xl sm:text-3xl font-bold text-gray-700 text-center mb-6 sm:mb-8">
                     {m[0].text}
                 </p>
                 <img
@@ -164,12 +161,9 @@ const MyComments = () => {
             <div className="h-[64px]" />
             <section className="py-10 px-8">
                 <div className="mx-auto">
-                    <h3
-                        className="text-4xl font-bold mb-6"
-                        style={{ textShadow: "2px 1px 2px rgba(0,0,0,0.6)" }}
-                    >
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
                         {m[15].text}{userName}{m[1].text}
-                    </h3>
+                    </h1>
 
                     {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
 

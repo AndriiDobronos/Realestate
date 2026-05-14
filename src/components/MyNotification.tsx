@@ -103,15 +103,7 @@ const MyNotification = () => {
     if (notifications.length === 0) {
         return (
             <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
-                {error && (
-                    <p className="text-red-500 text-sm font-medium mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
-                        {error}
-                    </p>
-                )}
-                <p
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
-                    style={{ textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)" }}
-                >
+                <p className="text-2xl sm:text-3xl font-bold text-gray-700 text-center mb-6 sm:mb-8">
                     {n[1].text}
                 </p>
                 <img
@@ -127,12 +119,9 @@ const MyNotification = () => {
         <div>
             <div className="h-[64px]" />
             <section className="py-10 px-8">
-                <h3
-                    className="text-4xl font-bold mb-6"
-                    style={{ textShadow: "2px 1px 2px rgba(0,0,0,0.6)" }}
-                >
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
                     {userName}, {n[0].text}
-                </h3>
+                </h1>
 
                 {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
 

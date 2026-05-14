@@ -3,9 +3,9 @@ import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import DescriptionOfDetails from "./DescriptionOfDetails";
 import Map from "./Map";
-import {Home} from "../pages/Home";
 import {RootState} from "../app/store";
 import {useSelector} from "react-redux";
+import { useAuth } from '../services/useAuth';
 import {getRandomHexColor} from"../services/randomColor";
 import {useLanguage} from "../context/LanguageContext";
 import allEnTexts from '../contents/allEnTexts';
@@ -45,9 +45,9 @@ const Details = () => {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [show, setShow] = useState(false);
-    const [saveMessage, setSaveMessage] = useState('');
     const [comments, setComments] = useState<any[]>([{comment:"loading!!!"}]);
     const [error, setError] = useState('');
+    const { handleFullLogout } = useAuth();
     const bgColor = getRandomHexColor();
     const [formData, setFormData] = useState({
         listingId: `${id}`,
@@ -127,7 +127,7 @@ const Details = () => {
     }
 
     const handleDeleteUserDataByUserId = () => {
-        Home.handleLogOut()
+        handleFullLogout(() => {}, () => {});
     }
 
     const handleSubmitReview = async (e: React.FormEvent) => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, memo } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import L from "leaflet";
 import "leaflet-control-geocoder";
 import "./LeafletMaps.css";
@@ -25,10 +26,11 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
 function buildMarker(listing: any, lat: number, lon: number): L.Marker {
+    const bgColor = listing.listingType === "rent" ? "#2563EB" : "#F59E0B";
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: "custom-marker",
-            html: `<div class="price-tag">$${listing.price}</div>`,
+            html: `<div class="price-tag" style="background:${bgColor}">$${listing.price}</div>`,
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         }),
@@ -56,6 +58,8 @@ const LeafletMaps = ({
     const circleRef       = useRef<L.Circle | null>(null);
     const centerMarkerRef = useRef<L.Marker | null>(null);
     const [mapReady, setMapReady] = useState(false);
+
+    const listingsReady = listings.length > 0;
 
     // Prevents geocoding re-run when the parent passes a new formMapFilter object
     // reference but with identical values (e.g. unrelated Redux dispatch).
@@ -217,16 +221,101 @@ const LeafletMaps = ({
 
     return (
         <div className="text-left">
-            <div
-                ref={containerRef}
-                style={{
-                    height: "600px",
-                    minWidth: "258px",
-                    border: "2px solid black",
-                    borderRadius: "10px",
-                    zIndex: "20",
-                }}
-            />
+            <div className="relative">
+                <div
+                    ref={containerRef}
+                    style={{
+                        height: "600px",
+                        minWidth: "258px",
+                        border: "2px solid black",
+                        borderRadius: "10px",
+                        zIndex: "20",
+                    }}
+                />
+
+                {/* Loading overlay — visible until listings arrive from server */}
+                <AnimatePresence>
+                {!listingsReady && (
+                    <motion.div
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.7 }}
+                        className="absolute inset-0 flex flex-col items-center justify-end pb-[18%]"
+                        style={{ borderRadius: "10px", zIndex: 2000 }}
+                    >
+                        {/* House drop + ripple rings */}
+                        <div className="relative flex flex-col items-center gap-4">
+                            <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
+                                {/* Ripple rings */}
+                                {[0, 0.6].map((delay, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="absolute rounded-full"
+                                        style={{ width: 208, height: 208, border: "2px solid rgba(37, 99, 235, 0.65)" }}
+                                        animate={{ scale: [0, 2.8], opacity: [0.7, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.6, delay, ease: "easeOut" }}
+                                    />
+                                ))}
+                                {/* Falling house */}
+                                <motion.div
+                                    animate={{
+                                        y: [-560, 0, 0, -20],
+                                        scaleY: [1, 1, 0.70, 1],
+                                        scaleX: [1, 1, 1.30, 1],
+                                        opacity: [0, 1, 1, 0],
+                                    }}
+                                    transition={{
+                                        repeat: Infinity,
+                                        duration: 2.6,
+                                        times: [0, 0.34, 0.48, 1],
+                                        ease: ["easeIn", "linear", "easeOut"],
+                                        repeatDelay: 0.2,
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="216px" viewBox="0 0 24 24" width="216px" fill="#2563EB">
+                                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                                    </svg>
+                                </motion.div>
+                            </div>
+
+                            {/* Pulsing dots */}
+                            <div className="flex items-center gap-5">
+                                {[0, 0.25, 0.5].map((delay, i) => (
+                                    <motion.span
+                                        key={i}
+                                        className="w-8 h-8 rounded-full inline-block"
+                                        style={{ background: "#2563EB" }}
+                                        animate={{ opacity: [0.15, 1, 0.15] }}
+                                        transition={{ repeat: Infinity, duration: 1.2, delay, ease: "easeInOut" }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                    </motion.div>
+                )}
+                </AnimatePresence>
+            </div>
+
+            {/* Progress bar below map */}
+            <AnimatePresence>
+            {!listingsReady ? (
+                <motion.div
+                    className="mt-2 h-4 bg-slate-200 rounded-full overflow-hidden"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <motion.div
+                        className="h-full bg-blue-500 rounded-full"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "80%" }}
+                        transition={{ duration: 28, ease: "easeOut" }}
+                    />
+                </motion.div>
+            ) : (
+                <div className="h-6" />
+            )}
+            </AnimatePresence>
         </div>
     );
 };

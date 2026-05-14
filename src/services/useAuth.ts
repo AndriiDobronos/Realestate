@@ -1,8 +1,9 @@
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setIsRegistration, setUserName, setUserId, resetRegistration } from '../features/registration/registrationSlice';
 import { setAuthProperty, resetAuthProperty, setAuthChecking } from '../features/auth/authSlice';
 import { fetchListings } from './ListingService';
+import { RootState } from '../app/store';
 
 interface AuthUser {
     id: string;
@@ -20,6 +21,7 @@ export const useAuth = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const userId = useSelector((state: RootState) => state.registration.userId);
 
     const handleAuthSuccess = (data: AuthSuccessData, redirectTo: string = '/') => {
         const { user } = data;
@@ -39,7 +41,78 @@ export const useAuth = () => {
         setTimeout(() => navigate(redirectTo), 1500);
     };
 
-    const handleResetUserData = async (setListings?: (data: any[]) => void) => {
+    interface ListingItem { image: string[]; [key: string]: unknown }
+    const handleFullLogout = async (setListings: (data: ListingItem[]) => void, setMessage: (msg: string) => void) => {
+        if (!confirm('Confirm continue deleting data!')) return;
+
+        try {
+            const listingsResponse = await fetch(
+                `${API_URL}/api/listings/ownerId/${encodeURIComponent(userId)}`,
+                { credentials: 'include' }
+            );
+            if (!listingsResponse.ok) throw new Error(await listingsResponse.text());
+            const userListings = await listingsResponse.json();
+
+            if (userListings.length > 0) {
+                await fetch(`${API_URL}/listings/ownerId/${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+
+                const allImages: string[] = userListings.flatMap((l: ListingItem) => l.image);
+                const cloudName = import.meta.env.VITE_CLOUD_NAME || 'dndnmla09';
+                await Promise.all(
+                    allImages.map(async (url) => {
+                        if (!url) return;
+                        const publicId = url.split('/').pop()?.split('.')[0];
+                        if (!publicId) return;
+                        const sigRes = await fetch(`${API_URL}/generate-signature`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ public_id: publicId, timestamp: Math.floor(Date.now() / 1000) }),
+                        });
+                        const sig = await sigRes.json();
+                        await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ public_id: publicId, api_key: sig.api_key, timestamp: sig.timestamp, signature: sig.signature }),
+                        });
+                    })
+                );
+            }
+
+            await fetch(`${API_URL}/api/comments/author/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+
+            await fetch(`${API_URL}/api/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+
+            const logoutRes = await fetch(`${API_URL}/logout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+            if (!logoutRes.ok) throw new Error(await logoutRes.text());
+
+            dispatch(resetRegistration());
+            dispatch(resetAuthProperty());
+            localStorage.removeItem('user');
+            localStorage.removeItem('registrationState');
+            localStorage.removeItem('userImages');
+
+            const freshData = await fetchListings();
+            setListings(freshData);
+        } catch (error: unknown) {
+            setMessage(`Logout error: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    };
+
+    const handleResetUserData = async (setListings?: (data: ListingItem[]) => void) => {
         try {
             await fetch(`${API_URL}/logout`, {
                 method: 'POST',
@@ -82,5 +155,5 @@ export const useAuth = () => {
         }
     };
 
-    return { handleAuthSuccess, handleResetUserData, checkAuth, API_URL };
+    return { handleAuthSuccess, handleFullLogout, handleResetUserData, checkAuth, API_URL };
 };

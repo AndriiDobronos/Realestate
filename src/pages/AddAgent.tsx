@@ -184,7 +184,7 @@ const AddAgent = () => {
 
                 {/* ── Photo ────────────────────────────────────── */}
                 <div className="flex items-center gap-5">
-                    <div>
+                    <div className="w-[180px]">
                         <p className={labelCls}>{a[0].text}</p>
                         <ImageUpLoader
                             key={0}
