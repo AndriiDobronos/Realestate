@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-
 const Burger = ({ open }: { open: boolean }) => (
     <div className="flex flex-col justify-between w-6 h-5">
     <span
