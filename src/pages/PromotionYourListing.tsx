@@ -11,11 +11,6 @@ const fadeUp = {
     visible: { opacity: 1, y: 0 },
 };
 
-const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-};
-
 const stagger = {
     visible: { transition: { staggerChildren: 0.12 } },
 };
