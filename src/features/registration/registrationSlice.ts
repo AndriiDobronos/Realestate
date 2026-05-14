@@ -60,7 +60,8 @@ export const registrationSlice = createSlice({
 // Middleware для автосохранения
 export const registrationMiddleware: Middleware = (store) => (next) => (action) => {
     const result = next(action);
-    if (action.type.startsWith('registration/')) {
+    const act = action as { type?: string };
+    if (act.type?.startsWith('registration/')) {
         const state = store.getState().registration;
         localStorage.setItem('registrationState', JSON.stringify(state));
     }

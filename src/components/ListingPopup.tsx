@@ -1,6 +1,4 @@
 //import { Link } from "react-router-dom";
-import React from "react";
-
 const ListingPopup = ({ listing }:{listing:any} ) => {
     return (
         <div style={{width:"70px"}} >

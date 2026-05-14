@@ -191,7 +191,7 @@ const AddAgent = () => {
                             index={0}
                             onUploadComplete={handleImageUpload}
                             onDelete={handleImageDeleteUploading}
-                            initialUrl={uploadedImages[0]}
+                            initialUrl={uploadedImages[0] ?? undefined}
                         />
                     </div>
                     {message && (
