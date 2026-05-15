@@ -51,12 +51,13 @@ const VideoUploader: React.FC<Props> = ({ onUploadComplete }) => {
             onUploadComplete(secure_url, public_id);
             setIsUploadDone(true);
             setMessage('');
-        } catch (error: any) {
+        } catch (error) {
             setIsUploadDone(false);
-            if (error.response?.data?.error?.message) {
-                setMessage(`Upload error: ${error.response.data.error.message}`);
+            if (axios.isAxiosError(error)) {
+                const msg = (error.response?.data as { error?: { message?: string } } | undefined)?.error?.message;
+                setMessage(msg ? `Upload error: ${msg}` : `Upload failed. ${error.message}`);
             } else {
-                setMessage(`Upload failed. ${error.message || 'Unknown error'}`);
+                setMessage(`Upload failed. ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         } finally {
             setIsUploading(false);

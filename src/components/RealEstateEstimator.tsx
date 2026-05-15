@@ -37,16 +37,18 @@ const RealEstateEstimator = () => {
             if (!response?.text) throw new Error("Empty response from Google AI service");
             setEstimatedPrice(response.text);
             setConversationHistory(prev => [...prev, { question: propertyDescription, answer: response.text! }]);
-        } catch (err: any) {
+        } catch (err) {
             let reason = "Unknown error";
-            if (err.response) {
-                const { status, statusText, data } = err.response;
-                reason = `HTTP ${status}: ${statusText}`;
-                if (data?.error) reason += ` | ${data.error.message || JSON.stringify(data.error)}`;
-            } else if (err.status) {
-                reason = `Status: ${err.status} - ${err.statusText || "Unknown"}`;
-            } else if (err.message) {
-                reason = err.message;
+            if (typeof err === 'object' && err !== null) {
+                const e = err as { response?: { status?: number; statusText?: string; data?: { error?: { message?: string } } }; status?: number; statusText?: string; message?: string };
+                if (e.response) {
+                    reason = `HTTP ${e.response.status}: ${e.response.statusText}`;
+                    if (e.response.data?.error) reason += ` | ${e.response.data.error.message || JSON.stringify(e.response.data.error)}`;
+                } else if (e.status) {
+                    reason = `Status: ${e.status} - ${e.statusText ?? "Unknown"}`;
+                } else if (e.message) {
+                    reason = e.message;
+                }
             }
             setError(contents.estimator[1].text);
             setErrorDetails(reason);

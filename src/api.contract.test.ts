@@ -25,12 +25,13 @@ describe("API contract tests", () => {
   it("session error structure", async () => {
     try {
       await axios.get(`${API_URL}/session`);
-    } catch (error: any) {
-      expect(error.response.status).toBe(401);
-
-      expect(error.response.data).toMatchObject({
-        message: expect.any(String),
-      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        expect(error.response?.status).toBe(401);
+        expect(error.response?.data).toMatchObject({
+          message: expect.any(String),
+        });
+      }
     }
   });
 });

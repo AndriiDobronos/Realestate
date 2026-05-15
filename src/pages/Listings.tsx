@@ -165,6 +165,7 @@ const Listings = () => {
             };
             fetchListingData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, listingId]);
 
     const handleImageUpload = (index: number, url: string) => {
@@ -346,7 +347,8 @@ const Listings = () => {
 
     useEffect(() => {
         const saved = localStorage.getItem('userImages');
-        if (saved) dispatch(setImages(JSON.parse(saved)));
+        if (saved) dispatch(setImages(JSON.parse(saved) as string[]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleNext = () => {

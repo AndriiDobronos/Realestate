@@ -858,7 +858,7 @@ const RegistrationForm: React.FC = () => {
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
-    const onAuthSuccess = (data: any) => {
+    const onAuthSuccess = (data: { user: { id: string; name: string; email: string }; message?: string }) => {
         setSuccessMessage(data.message || contents.registrationErrors.successMessage);
         setStatus('success');
         handleAuthSuccess(data);

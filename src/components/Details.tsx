@@ -11,6 +11,13 @@ import {useLanguage} from "../context/LanguageContext";
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 
+interface Comment {
+    commentsAuthor: string;
+    comment: string;
+    rating: string;
+    timePublication: string;
+}
+
 interface Listing {
     _id: string;
     date: number;
@@ -45,7 +52,7 @@ const Details = () => {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [show, setShow] = useState(false);
-    const [comments, setComments] = useState<any[]>([{comment:"loading!!!"}]);
+    const [comments, setComments] = useState<Comment[]>([{comment:"loading!!!", commentsAuthor:"", rating:"", timePublication:""}]);
     const [error, setError] = useState('');
     const [saveMessage, setSaveMessage] = useState('');
     const { handleFullLogout } = useAuth();
@@ -84,19 +91,21 @@ const Details = () => {
             try {
                 const response = await axios.get(`${API_URL}/listing/${id}`);
                 setListing(response.data);
-            } catch (err) {
+            } catch {
                 setError('Failed to load listing details');
             } finally {
                 setLoading(false);
             }
         };
         fetchListing();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     useEffect(() => {
         if(userName === `admin`) {
             setIsAdmin(true)
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchComments = async () => {
@@ -110,6 +119,7 @@ const Details = () => {
             setComments(data);
         };
         getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData]);
 
     const timeAgoFromTimestamp = (timestamp: number): string => {

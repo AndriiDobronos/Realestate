@@ -10,6 +10,7 @@ const LiqPayButton = () => {
         axios.get(`${API_URL}/api/liqpay-params`)
             .then(response => setLiqpayData(response.data))
             .catch(error => console.error('Error fetching LiqPay params:', error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleSubmit = () => {
