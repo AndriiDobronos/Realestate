@@ -303,6 +303,7 @@ const Login: React.FC = () => {
             setErrorMessage(contents.registrationErrors?.registeredWithGoogle || contents.loginErrors.googleEmailWithGoogle);
             setStatus('wrong_method');
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
     // ─── Проверяем активную сессию при открытии страницы.
@@ -313,6 +314,7 @@ const Login: React.FC = () => {
             const from = location.state?.from || '/';
             navigate(from, { replace: true });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRegistration]);
 
     // ─── Стандартный вход по email + password ─────────────────────────────────

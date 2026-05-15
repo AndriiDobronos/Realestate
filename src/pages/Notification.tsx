@@ -129,6 +129,7 @@ const Notification = () => {
     // Sync coordinates into formData
     useEffect(() => {
         setFormData(prev => ({ ...prev, userId: `${userId}`, lat: coordinates.lat, lon: coordinates.lon }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [coordinates]);
 
     // Load existing notification in edit mode
@@ -164,6 +165,7 @@ const Notification = () => {
 
     useEffect(() => {
         if (isEditMode) fetchNotificationData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, notificationId]);
 
     // Invalidate map size when panel opens

@@ -5,7 +5,7 @@ export const fetchListings = async () => {
     return response.json();
 };
 
-export const addListing = async (listingData: Record<string, any>) => {
+export const addListing = async (listingData: Record<string, unknown>) => {
     const response = await fetch(`${API_URL}/listings`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json',},
@@ -15,7 +15,7 @@ export const addListing = async (listingData: Record<string, any>) => {
     return response.json();
 };
 
-export const addListingWithComparison = async (listingData: Record<string, any>) => {
+export const addListingWithComparison = async (listingData: Record<string, unknown>) => {
     try {
         const response = await fetch(`${API_URL}/api/listingsWithComparison`, {
             method: 'POST',
@@ -44,7 +44,7 @@ export const handleDeleteListingByUserName = async (userName:string) => {
             throw new Error(`Delete listings failed: ${errorText}`);
         }
         //setListings(prev => prev.filter((l: any) => l.owner !== userName));
-        return ((prev: any) => prev.filter((l: any) => l.owner !== userName));
+        return (prev: { owner: string }[]) => prev.filter((l) => l.owner !== userName);
     } catch (error) {
         console.error('Deletion error:', error);
         throw error;
@@ -62,7 +62,8 @@ export const handleDeleteUserDataByUserName = async (userName:string) => {
         const data = await response.json();
         console.log(`Success: ${data.message}`);
 
-    } catch (error: any) {
-        console.error(`Failed to delete User data: ${error.message}`);
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to delete User data: ${msg}`);
     }
 };

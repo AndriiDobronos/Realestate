@@ -7,12 +7,25 @@ import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
 import Footer from "../components/Footer";
 
+interface AgentData {
+    _id: string;
+    name: string;
+    jobTitle: string;
+    email: string;
+    image: string;
+    saleVolume: string;
+    totalDeal: string;
+    rating: string;
+    license: string;
+    phone: string;
+}
+
 const Agents = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts;
     const userName = useSelector((state: RootState) => state.registration.userName);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [agentsData, setAgentsData] = useState<any[]>([]);
+    const [agentsData, setAgentsData] = useState<AgentData[]>([]);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
@@ -23,6 +36,7 @@ const Agents = () => {
         };
         fetchAgents();
         if (userName === "admin") setIsAdmin(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

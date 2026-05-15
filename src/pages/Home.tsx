@@ -13,6 +13,24 @@ import LoadingSkeleton from "../../src/components/LoadingSkeleton";
 import Footer from "../components/Footer";
 import LeafletMaps from "../components/LeafletMaps";
 import ListingCard from "../components/ListingCard";
+
+interface HomeListing {
+    _id: string;
+    date: number | string;
+    listingType: string;
+    propertyType: string;
+    apartmentDetails: string;
+    description: string;
+    price: number | string;
+    image: string[];
+    contact: string;
+    location: string;
+    owner: string;
+    numbersOfRooms?: number;
+    totalArea?: number;
+    numberOfFloor?: number;
+    numberOfStoreysOfBuilding?: number;
+}
 import { setScrollY } from '../features/scroll/scrollSlice';
 import { useLanguage } from '../context/LanguageContext';
 import allEnTexts from '../contents/allEnTexts';
@@ -37,7 +55,7 @@ const Home = () => {
     const [openFilter, setOpenFilter] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [openInfo, setOpenInfo] = useState(false);
-    const [listings, setListings] = useState<any[]>([]);
+    const [listings, setListings] = useState<HomeListing[]>([]);
     const [loading, setLoading] = useState(true);
     const [featuredAd, setFeaturedAd] = useState({adsString:"", videoUrl:[""]});
     const filteredListings = !openFilter ? listings : listings.filter((listing) => {
@@ -120,6 +138,7 @@ const Home = () => {
         };
 
         fetchFeaturedAd();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
@@ -265,7 +284,8 @@ const Home = () => {
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload)
         };
-    }, [isRegistration, userName]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isRegistration, userName]);
 
     const scrollToListings = () => {
         document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
@@ -658,7 +678,7 @@ const Home = () => {
 
             {/*{DELETE before deploy !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
             <div className="container mx-auto text-center py-10">
-                <button onClick={() => handleResetUserData(setListings)}>
+                <button onClick={() => handleResetUserData((data) => setListings(data as unknown as HomeListing[]))}>
                     **** 🔄 Reset auth ****
                 </button>
             </div>
@@ -673,7 +693,7 @@ const Home = () => {
 
                     {loading ? <LoadingSkeleton /> : <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
-                        {((filterState.novelty === "newToOld") ? [...filteredListings].reverse() : filteredListings).map((listing: any) => (
+                        {((filterState.novelty === "newToOld") ? [...filteredListings].reverse() : filteredListings).map((listing) => (
                             <ListingCard
                                 key={listing._id}
                                 listing={listing}

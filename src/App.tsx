@@ -48,7 +48,7 @@ function App() {
                         <Route path="advertising" element={<AdvertisingVideoService  />} />
                         <Route path="login" element={<Login />} />
                         <Route path="details/:id" element={<Details />} />
-                        <Route path="leafletMaps" element={<LeafletMaps listings={[]} formMapFilter={null} isVisible />} />
+                        <Route path="leafletMaps" element={<LeafletMaps listings={[]} isVisible />} />
                         <Route path="myListings" element={<MyListings  />} />
                         <Route path="myNotification" element={<MyNotification  />} />
                         <Route path="notification" element={<Notification />} />

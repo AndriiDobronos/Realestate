@@ -53,6 +53,7 @@ const AddAgent = () => {
             }
         };
         fetchAgentData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditMode, agentId]);
 
     const handleImageUpload = (index: number, url: string) => {
@@ -113,8 +114,8 @@ const AddAgent = () => {
             await response.json();
             setName(''); setEmail(''); setPhone(''); setLicense('');
             setJobTitle(''); setSaleVolume(''); setTotalDeal(''); setRating('');
-        } catch (error: any) {
-            setMessage(`${a[29].text}${error}`);
+        } catch (error) {
+            setMessage(`${a[29].text}${error instanceof Error ? error.message : String(error)}`);
             setActionSuccess(false);
         }
     };
@@ -155,9 +156,12 @@ const AddAgent = () => {
                 setMessage(a[24].text);
                 setActionSuccess(false);
             }
-        } catch (error: any) {
+        } catch (error) {
             const prefix = isEditMode ? a[27].text : a[28].text;
-            setMessage(`${prefix}${error.response?.data?.message || error.message}`);
+            const msg = axios.isAxiosError(error)
+                ? (error.response?.data as { message?: string } | undefined)?.message ?? error.message
+                : error instanceof Error ? error.message : String(error);
+            setMessage(`${prefix}${msg}`);
             setActionSuccess(false);
         }
     };

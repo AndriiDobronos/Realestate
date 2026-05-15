@@ -2,6 +2,15 @@ import { useEffect, useRef, useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import L from "leaflet";
 import "leaflet-control-geocoder";
+import { IFilterMapState } from "../features/filterMap/filterMapSlice";
+
+interface ListingMarker {
+    _id: string;
+    listingType: string;
+    propertyType: string;
+    price: number | string;
+    location: string;
+}
 
 const COORDS_CACHE_KEY = "coordsCache";
 const GEOCODE_DELAY_MS = 1200; // Nominatim usage policy: max 1 req/sec
@@ -24,7 +33,7 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 
 const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
-function buildMarker(listing: any, lat: number, lon: number): L.Marker {
+function buildMarker(listing: ListingMarker, lat: number, lon: number): L.Marker {
     const bgColor = listing.listingType === "rent" ? "#2563EB" : "#F59E0B";
     return L.marker([lat, lon], {
         icon: L.divIcon({
@@ -44,13 +53,15 @@ function buildMarker(listing: any, lat: number, lon: number): L.Marker {
     `);
 }
 
+const defaultFilter: IFilterMapState = { listingType: '', rangeValue: 20, destination: '', propertyType: '' };
+
 const LeafletMaps = ({
     listings,
-    formMapFilter,
+    formMapFilter = defaultFilter,
     isVisible = false,
 }: {
-    listings: any[];
-    formMapFilter: any;
+    listings: ListingMarker[];
+    formMapFilter?: IFilterMapState;
     isVisible?: boolean;
 }) => {
     const containerRef    = useRef<HTMLDivElement>(null);
@@ -150,7 +161,7 @@ const LeafletMaps = ({
             }
 
             // ── Filter predicate ────────────────────────────────────────────
-            const passes = (listing: any, lat: number, lon: number): boolean =>
+            const passes = (listing: ListingMarker, lat: number, lon: number): boolean =>
                 haversineKm(centerLat, centerLon, lat, lon) <= effectiveRange &&
                 (!filter.listingType  || listing.listingType  === filter.listingType) &&
                 (!filter.propertyType || listing.propertyType === filter.propertyType);
@@ -218,7 +229,7 @@ const LeafletMaps = ({
 
         render();
         return () => { cancelled = true; };
-    }, [mapReady, listings, filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [mapReady, listings, filterKey]);
 
     return (
         <div className="text-left">

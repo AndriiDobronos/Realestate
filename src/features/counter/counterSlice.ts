@@ -4,7 +4,7 @@ import type { RootState } from '../../app/store'
 
 export interface CounterState {
     value: number
-    properties: any
+    properties: Property[]
 }
 
 export interface Property {
@@ -21,26 +21,26 @@ export const counterSlice = createSlice({
     name: 'counter',
     initialState,
     reducers: {
-        increment: (state:any) => {
+        increment: (state) => {
             state.value += 1
         },
-        decrement: (state:any) => {
+        decrement: (state) => {
             state.value -= 1
         },
-        incrementByAmount: (state:any, action: PayloadAction<number>) => {
+        incrementByAmount: (state, action: PayloadAction<number>) => {
             state.value += action.payload
         },
-        setNought: (state:any, action: PayloadAction<number>) => {
+        setNought: (state, action: PayloadAction<number>) => {
             state.value = action.payload
         },
-        setProperties: (state:any, action: PayloadAction<Property[]>) => {
+        setProperties: (state, action: PayloadAction<Property[]>) => {
             state.properties = action.payload;
         },
-        addProperty: (state:any, action: PayloadAction<Property>) => {
+        addProperty: (state, action: PayloadAction<Property>) => {
             state.properties.push(action.payload);
         },
-        removeProperty: (state:any, action: PayloadAction<number>) => {
-            state.properties = state.properties.filter((property:any) => property.id !== action.payload);
+        removeProperty: (state, action: PayloadAction<number>) => {
+            state.properties = state.properties.filter((property: Property) => property.id !== action.payload);
         },
     },
 })

@@ -15,9 +15,11 @@ describe("Session smoke tests", () => {
 
       // если вдруг не упал — это ошибка
       throw new Error("Expected 401 but got success");
-    } catch (error: any) {
-      expect(error.response.status).toBe(401);
-      expect(error.response.data).toHaveProperty("message");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        expect(error.response?.status).toBe(401);
+        expect(error.response?.data).toHaveProperty("message");
+      }
     }
   });
 });

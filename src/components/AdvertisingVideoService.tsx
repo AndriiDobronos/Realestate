@@ -32,6 +32,7 @@ const AdvertisingVideoService = () => {
 
     useEffect(() => {
         fetchAds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchAds = async () => {
@@ -41,7 +42,7 @@ const AdvertisingVideoService = () => {
             const initial: Record<string, string> = {};
             res.data.forEach((ad: AdVideo) => { initial[ad._id] = ''; });
             setChangeableAdsStrings(initial);
-        } catch (err) {
+        } catch {
             console.error('Failed to fetch ads');
         }
     };
@@ -105,8 +106,11 @@ const AdvertisingVideoService = () => {
             const response = await axios.delete(`${API_URL}/api/videos/${ad.publicId}`);
             setMessage(`${t.successPrefix} ${response.data.message}`);
             await fetchAds();
-        } catch (error: any) {
-            setMessage(`${t.failedDelete} ${error.response?.data?.error || error.message}`);
+        } catch (error) {
+            const msg = axios.isAxiosError(error)
+                ? (error.response?.data?.error as string | undefined) ?? error.message
+                : String(error);
+            setMessage(`${t.failedDelete} ${msg}`);
         }
     };
 
@@ -115,8 +119,11 @@ const AdvertisingVideoService = () => {
             await axios.post(`${API_URL}/api/videos/set-featured`, { adId });
             setMessage(t.successFeatured);
             await fetchAds();
-        } catch (error: any) {
-            setMessage(`${t.failedFeatured} ${error.response?.data?.error || error.message}`);
+        } catch (error) {
+            const msg = axios.isAxiosError(error)
+                ? (error.response?.data?.error as string | undefined) ?? error.message
+                : String(error);
+            setMessage(`${t.failedFeatured} ${msg}`);
         }
     };
 
@@ -131,8 +138,11 @@ const AdvertisingVideoService = () => {
             setMessage(t.successUpdated);
             setChangeableAdsStrings(prev => ({ ...prev, [adId]: '' }));
             await fetchAds();
-        } catch (error: any) {
-            setMessage(`${t.failedUpdate} ${error.response?.data?.error || error.message}`);
+        } catch (error) {
+            const msg = axios.isAxiosError(error)
+                ? (error.response?.data?.error as string | undefined) ?? error.message
+                : String(error);
+            setMessage(`${t.failedUpdate} ${msg}`);
         }
     };
 
