@@ -226,7 +226,7 @@ const Header = () => {
                 <button
                     ref={burgerRef}
                     onClick={() => setMobileMenu(prev => !prev)}
-                    className="flex md:hidden bg-transparent p-2 rounded-xl hover:bg-white/10 transition-colors"
+                    className="flex items-center justify-center md:hidden bg-transparent min-h-[44px] min-w-[44px] rounded-xl hover:bg-white/10 transition-colors"
                     aria-label="Menu"
                 >
                     <Burger open={mobileMenu} />
