@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
-import {useLanguage} from "../context/LanguageContext";
+import { useLanguage } from "../context/LanguageContext";
 
 interface ImageUploaderProps {
     index: number;
@@ -11,49 +11,41 @@ interface ImageUploaderProps {
     initialUrl?: string;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({index, onUploadComplete, onDelete, initialUrl}) => {
-    const { language } = useLanguage();
-    const contents = language === "en" ? allEnTexts : allUaTexts
-    const [uploading, setUploading] = useState(false);
-    const [imageUrl, setImageUrl] = useState<string | null>(initialUrl || null);
-    const [error, setError] = useState('');
-    const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
-    const UPLOAD_PRESET_NAME = import.meta.env.VITE_UPLOAD_PRESET_NAME;
-    const PRESET_VALUE = import.meta.env.VITE_PRESET_VALUE;
+const CLOUD_NAME        = import.meta.env.VITE_CLOUD_NAME;
+const UPLOAD_PRESET_NAME = import.meta.env.VITE_UPLOAD_PRESET_NAME;
+const PRESET_VALUE      = import.meta.env.VITE_PRESET_VALUE;
 
-    // Добавляем обработчик клика
+const ImageUploader: React.FC<ImageUploaderProps> = ({ index, onUploadComplete, onDelete, initialUrl }) => {
+    const { language } = useLanguage();
+    const contents = language === "en" ? allEnTexts : allUaTexts;
+
+    const [uploading, setUploading] = useState(false);
+    const [imageUrl, setImageUrl]   = useState<string | null>(initialUrl || null);
+    const [error, setError]         = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleClick = () => {
-        fileInputRef.current?.click();
-    };
+    useEffect(() => {
+        setImageUrl(initialUrl || null);
+    }, [initialUrl]);
 
-    const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            await handleFileUpload(file);
-            e.target.value = ''; // Сбрасываем значение input
+    const upload = async (file: File) => {
+        if (!file.type.startsWith('image/')) {
+            setError('Please upload an image file');
+            return;
         }
-    };
-
-    const uploadImageToCloudinary = async (file: File) => {
         setUploading(true);
         setError('');
-
         const formData = new FormData();
         formData.append('file', file);
-        formData.append(`${UPLOAD_PRESET_NAME}`, `${PRESET_VALUE}`);
-
+        formData.append(UPLOAD_PRESET_NAME, PRESET_VALUE);
         try {
             const response = await axios.post(
                 `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
                 formData
             );
-
             setImageUrl(response.data.secure_url);
             onUploadComplete(index, response.data.secure_url);
-
-        } catch (err) {
+        } catch {
             setError('Failed to upload image');
             onUploadComplete(index, '');
         } finally {
@@ -61,204 +53,86 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({index, onUploadComplete, o
         }
     };
 
-    const handleFileUpload = async (file: File) => {
-        if (!file.type.startsWith('image/')) {
-            setError('Please upload an image file');
-            return;
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            upload(file);
+            e.target.value = '';
         }
-        uploadImageToCloudinary(file);
     };
 
-    const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-        const file = event.dataTransfer.files[0];
-
-        if (!file?.type.startsWith('image/')) {
-            setError('Please upload an image file');
-            return;
-        }
-        uploadImageToCloudinary(file);
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) upload(file);
     };
 
-    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-        event.preventDefault();
-    };
-
-    const handleDelete = (event: React.MouseEvent) => {
-        event.stopPropagation();
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setImageUrl(null);
         onUploadComplete(index, '');
         onDelete?.(index);
     };
 
-    // Добавляем эффект для синхронизации с initialUrl
-    useEffect(() => {
-        setImageUrl(initialUrl || null);
-    }, [initialUrl]);
-
     return (
-        <div className="image-uploader-container" onClick={handleClick} >
+        <div
+            className="relative transition-all duration-300 cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+        >
             <input
                 type="file"
                 ref={fileInputRef}
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={handleFileInput}
                 accept="image/*"
             />
             <div
                 onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                className={`upload-area ${imageUrl ? 'has-image' : ''}`}
+                onDragOver={(e) => e.preventDefault()}
+                className={[
+                    'w-full h-40',
+                    'flex items-center justify-center',
+                    'border-[3px] border-dashed rounded-lg',
+                    'transition-colors duration-300',
+                    imageUrl
+                        ? 'border-[#4CAF50] bg-[#f8fff8] p-0'
+                        : 'border-[#ccc] text-[#444] p-4 hover:border-[#666] hover:text-black',
+                ].join(' ')}
             >
                 {uploading ? (
-                    <div className="loader" style={style.loader}>Uploading...</div>
+                    <div className="flex items-center justify-center w-full h-full">
+                        <div className="w-9 h-9 rounded-full border-[3px] border-blue-600/15 border-t-blue-600 animate-spin" />
+                    </div>
                 ) : imageUrl ? (
-                    <div className="image-preview">
+                    <div className="relative flex justify-center items-center w-full h-full bg-[#ccc] rounded-md">
                         <img
                             src={imageUrl}
                             alt="Uploaded"
-                            className="preview-image"
+                            className="w-full h-full object-cover rounded-md"
                         />
                         <button
                             type="button"
                             onClick={handleDelete}
-                            className="delete-button"
+                            className="absolute top-0 right-0 w-11 h-11 flex items-center justify-center !bg-red-600/80 hover:!bg-red-700 !shadow-none !border-0 rounded-tr-md rounded-bl-lg text-white text-lg leading-none transition-colors duration-200 backdrop-blur-[2px]"
                         >
                             ×
                         </button>
                     </div>
                 ) : (
-                    <div className="upload-prompt">
-                        <p>{contents.imageUploader[0].text}</p>
-                        {/*{Drag & drop image}*/}
-                        <p>{contents.imageUploader[1].text}</p>
-                        {/*{or click to browse}*/}
+                    <div className="text-center text-sm">
+                        <div className="hidden sm:flex flex-col items-center gap-0.5">
+                            <p>{contents.imageUploader[0].text}</p>
+                            <p>{contents.imageUploader[1].text}</p>
+                        </div>
+                        <div className="flex sm:hidden">
+                            <p>{contents.imageUploader[2].text}</p>
+                        </div>
                     </div>
                 )}
-                {error && <p className="error-message">{error}</p>}
+                {error && <p className="text-red-500 mt-2 text-xs">{error}</p>}
             </div>
         </div>
     );
 };
 
 export default ImageUploader;
-
-const style: { [key: string]: React.CSSProperties } = {
-    loader: {
-        width: 'fit-content',
-        fontWeight: 'bold',
-        fontFamily: 'sans-serif',
-        fontSize: '24px',
-        color: 'black',
-        margin: '0 auto 0 auto',
-        background: 'repeating-linear-gradient(90deg,currentColor 0 8%,#0000 0 10%) 200% 100%/200% 3px no-repeat',
-        animation: 'l3 2s steps(6) infinite',
-    }
-}
-
-const styleSheet = document.styleSheets[0]; // Получаем первый стиль на странице
-styleSheet.insertRule(`
-  @keyframes l3 {
-    to {
-      background-position: 80% 100%;
-    }
-  }
-`, styleSheet.cssRules.length);
-
-const styles = `
-    .image-uploader-container {
-        transition: all 0.3s ease;
-        /* margin: 0 0 1rem 1rem; */
-        position: relative;       
-    }
-
-    .upload-area {
-        border: 3px dashed #ccc;
-        border-radius: 8px;
-        padding: 1rem;
-        /* min-height: 100px; */ 
-        width: 180px;  /* Фиксированная ширина */
-        height: 160px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: border-color 0.3s;
-        box-sizing: border-box;
-        color: #444;
-        @media(max-width: 426px) {
-            width: 150px;
-        }
-    }
-    
-    .upload-area.has-image {
-    border-color: #4CAF50;
-    background: #f8fff8;
-    }
-
-    .upload-area:hover {
-        border-color: #666;
-        color: #000;
-    }
-
-    .has-image {
-        border-color: #4CAF50;
-        padding: 0;
-    }
-  
-    .image-preview {
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 6px;
-        background-color: #ccc;
-    }
-    
-    .preview-image {
-       object-fit: cover;
-       max-height: 180px;
-    }
-
-    .delete-button {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        transition: opacity 0.3s ease;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 14px;
-        line-height: 0.2;
-        opacity: 0;
-    }
-    
-    .upload-area:hover .delete-button {
-        opacity: 1;
-    }
-
-    .loader {
-        color: #666;
-        font-size: 0.9rem;
-    }
-
-    .error-message {
-        color: #ff4444;
-        margin-top: 0.5rem;
-        font-size: 0.8rem;
-    }
-`;
-
-const styleTag = document.createElement('style');
-styleTag.innerHTML = styles;
-document.head.appendChild(styleTag);

@@ -151,6 +151,47 @@ Both files export a plain object. Text is grouped by feature (e.g. `login`, `foo
 - All three commands must pass before any commit.
 - If there are errors, fix them before committing.
 
+## Mobile-First UX Rules — mandatory for every component and page
+
+**All interactive elements must work correctly on touch (phone) screens.**
+
+### Rules
+
+1. **Minimum tap target:** Every clickable/tappable element must be at least 44×44px (use `min-h-[44px] min-w-[44px]` or `py-3 px-4`).
+2. **No hover-only interactions:** `onMouseEnter` / `onMouseLeave` must never be the sole trigger for showing/hiding content. They can be used as a visual bonus on desktop, but the primary open/close mechanism must work via click/tap.
+3. **Dropdowns and popups — click-outside pattern:** Open on `onClick`. Close by clicking outside using `useRef` + `document.addEventListener('pointerdown', handler)`. The `pointerdown` event fires on both mouse and touch.
+4. **Tailwind breakpoints only — no JS for layout switching:** Use `hidden md:flex`, `flex md:hidden`, etc. Do not use `useState` + `window.innerWidth` + `resize` listeners to toggle layout. Tailwind breakpoints: `sm:` 640px, `md:` 768px, `lg:` 1024px, `xl:` 1280px.
+5. **Mobile menu visibility:** Use `opacity-0 pointer-events-none` (not `opacity-0 w-2`) to hide off-screen menus. The `w-2` trick creates invisible touch-blocking elements.
+6. **Form inputs and radio buttons:** Wrap `<input type="radio">` + `<label>` in a `<label>` with at least `py-2` padding to enlarge tap area. Inputs must have `min-h-[44px]`.
+7. **Absolute-positioned panels on mobile:** Add `max-w-[90vw]` and ensure no overflow outside viewport. Test on 375px viewport width.
+8. **Tooltips / hints:** Must be dismissible by tap (not only by `mouseleave`). Use the click-outside pattern or a close button.
+
+### Click-outside pattern (canonical)
+
+```ts
+const ref = useRef<HTMLDivElement>(null);
+useEffect(() => {
+  const handler = (e: PointerEvent) => {
+    if (ref.current && !ref.current.contains(e.target as Node)) {
+      setOpen(false);
+    }
+  };
+  document.addEventListener('pointerdown', handler);
+  return () => document.removeEventListener('pointerdown', handler);
+}, []);
+// Wrap the dropdown trigger + panel in <div ref={ref}>
+```
+
+### Checklist before committing a component with interactive elements
+
+- [ ] All tap targets ≥ 44×44px
+- [ ] No hover-only open/close logic
+- [ ] Dropdowns use click-outside (pointerdown) to close
+- [ ] Layout breakpoints use Tailwind classes, not JS resize listeners
+- [ ] Tested visually at 375px viewport width
+
+---
+
 ## Git
 
 Commit messages — Conventional Commits: feat/fix/chore/refactor/test/docs.

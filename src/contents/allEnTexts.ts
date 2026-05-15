@@ -66,6 +66,8 @@
         {id:"38",text:"Popular Listings"},
         {id:"39",text:"Advertising from our partners"},
         {id:"40",text:"Log In to Post an Advertisement"},
+        {id:"41",text:"Your services can be advertised here"},
+        {id:"42",text:"Loading video…"},
     ],
     cards:[
         {id:"0",text:"Property : "},
@@ -125,6 +127,7 @@
     imageUploader:[
         {id:"0",text:"Drag & drop image"},
         {id:"1",text:"or click to browse"},
+        {id:"2",text:"Tap to upload a photo"},
     ],
     login:[
         {id:"0",text:"Sign In"},

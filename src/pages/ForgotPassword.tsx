@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
-
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Status = 'idle' | 'loading' | 'sent' | 'error';
@@ -10,8 +8,6 @@ type Status = 'idle' | 'loading' | 'sent' | 'error';
 
 const ForgotPassword: React.FC = () => {
     const navigate = useNavigate();
-    const { language } = useLanguage();
-
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<Status>('idle');
     const [errorMessage, setErrorMessage] = useState('');

@@ -91,10 +91,7 @@ const MyListings = () => {
     if (listings.length === 0) {
         return (
             <div className="flex flex-col items-center min-h-screen pt-24 px-4 pb-8">
-                <p
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-6 sm:mb-8 md:mb-10"
-                    style={{ textShadow: "2px 1px 2px rgba(0, 0, 0, 0.6)" }}
-                >
+                <p className="text-2xl sm:text-3xl font-bold text-gray-700 text-center mb-6 sm:mb-8">
                     {m[12].text}
                 </p>
                 <img
@@ -111,12 +108,9 @@ const MyListings = () => {
             <div className="h-[64px]" />
             <section className="py-10 px-8">
                 <div className="mx-auto">
-                    <h3
-                        className="text-4xl font-bold mb-6"
-                        style={{ textShadow: "2px 1px 2px rgba(0,0,0,0.6)" }}
-                    >
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
                         {m[0].text}{userName}
-                    </h3>
+                    </h1>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {listings.map((listing, index) => {
                             const coverImage = listing.image?.find(img => img !== null) ?? null;

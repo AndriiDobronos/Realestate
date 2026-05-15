@@ -3,9 +3,9 @@ import { useParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import DescriptionOfDetails from "./DescriptionOfDetails";
 import Map from "./Map";
-import {Home} from "../pages/Home";
 import {RootState} from "../app/store";
 import {useSelector} from "react-redux";
+import { useAuth } from '../services/useAuth';
 import {getRandomHexColor} from"../services/randomColor";
 import {useLanguage} from "../context/LanguageContext";
 import allEnTexts from '../contents/allEnTexts';
@@ -39,15 +39,16 @@ const Details = () => {
     const userId = useSelector((state: RootState) => state.registration.userId);
     const location = useLocation();
     const savedScroll = location.state?.fromHomeScroll || 0;
-    const reviewRef = useRef(null);
+    const reviewRef = useRef<HTMLDivElement>(null);
     const { id } = useParams<{ id: string }>();
     const [listing, setListing] = useState<Listing | null>(null);
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [show, setShow] = useState(false);
-    const [saveMessage, setSaveMessage] = useState('');
     const [comments, setComments] = useState<any[]>([{comment:"loading!!!"}]);
     const [error, setError] = useState('');
+    const [saveMessage, setSaveMessage] = useState('');
+    const { handleFullLogout } = useAuth();
     const bgColor = getRandomHexColor();
     const [formData, setFormData] = useState({
         listingId: `${id}`,
@@ -65,12 +66,12 @@ const Details = () => {
         if (reviewRef.current) {
             reviewRef.current.scrollIntoView({
                 behavior: "smooth",
-                block: "review",
+                block: "start",
             });
         }
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData({
             ...formData,
@@ -127,7 +128,7 @@ const Details = () => {
     }
 
     const handleDeleteUserDataByUserId = () => {
-        Home.handleLogOut()
+        handleFullLogout(() => {}, () => {});
     }
 
     const handleSubmitReview = async (e: React.FormEvent) => {
@@ -273,12 +274,17 @@ const Details = () => {
                                     <option value="5">★★★★★</option>
                                 </select>
                             </div>
-                            <button
-                                type="submit"
-                                className="self-start sm:self-center px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 whitespace-nowrap"
-                            >
-                                {contents.details[10].text}
-                            </button>
+                            <div className="flex flex-col gap-1 self-start sm:self-center">
+                                <button
+                                    type="submit"
+                                    className="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 whitespace-nowrap"
+                                >
+                                    {contents.details[10].text}
+                                </button>
+                                {saveMessage && (
+                                    <span className="text-green-600 text-xs text-center">{saveMessage}</span>
+                                )}
+                            </div>
                         </form>
                     </div>
 

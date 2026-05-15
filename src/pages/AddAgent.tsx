@@ -184,14 +184,14 @@ const AddAgent = () => {
 
                 {/* ── Photo ────────────────────────────────────── */}
                 <div className="flex items-center gap-5">
-                    <div>
+                    <div className="w-[180px]">
                         <p className={labelCls}>{a[0].text}</p>
                         <ImageUpLoader
                             key={0}
                             index={0}
                             onUploadComplete={handleImageUpload}
                             onDelete={handleImageDeleteUploading}
-                            initialUrl={uploadedImages[0]}
+                            initialUrl={uploadedImages[0] ?? undefined}
                         />
                     </div>
                     {message && (

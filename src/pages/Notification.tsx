@@ -180,7 +180,7 @@ const Notification = () => {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(newMap);
         setMap(newMap);
-        return () => newMap.remove();
+        return () => { newMap.remove(); };
     }, []);
 
     /* ── Handlers ──────────────────────────────────────────────────── */
@@ -228,7 +228,22 @@ const Notification = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        dispatch(setNotificationProperty(formData));
+        dispatch(setNotificationProperty({
+            listingType:    formData.listingType,
+            propertyType:   formData.propertyType,
+            typeOfNovelty:  formData.typeOfNovelty,
+            minNumbersOfRoom: Number(formData.minNumbersOfRoom),
+            maxNumbersOfRoom: Number(formData.maxNumbersOfRoom),
+            minTotalArea:   Number(formData.minTotalArea),
+            maxTotalArea:   Number(formData.maxTotalArea),
+            minFloor:       Number(formData.minFloor),
+            maxFloor:       Number(formData.maxFloor),
+            minPrice:       Number(formData.minPrice),
+            maxPrice:       Number(formData.maxPrice),
+            location:       formData.locationSought,
+            locationRange:  formData.locationRange,
+            email:          formData.email,
+        }));
         try {
             const url = isEditMode && notificationId
                 ? `${API_URL}/api/notification/${notificationId}`

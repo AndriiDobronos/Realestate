@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import houseImage from "../assets/house_img.webp";
 import { Link, useLocation } from 'react-router-dom';
 import {RootState} from "../app/store";
 import { useSelector, useDispatch } from 'react-redux';
-import {setIsRegistration, setUserName, resetRegistration, setUserId} from "../features/registration/registrationSlice";
+import {setIsRegistration, setUserName, setUserId} from "../features/registration/registrationSlice";
 import {setImages} from "../features/upLoadImages/upLoadImagesSlice";
 import { setFilterCriteria, resetFilter } from "../features/filter/filterSlice";
 import { setFilterFeatures, resetMapFilter} from "../features/filterMap/filterMapSlice";
@@ -35,9 +36,7 @@ const Home = () => {
     const authChecking = useSelector((state: RootState) => state.auth.isChecking);
     const [openFilter, setOpenFilter] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
-    const [renderFilter, setRenderFilter] = useState(false);
     const [openInfo, setOpenInfo] = useState(false);
-    const [animate, setAnimate] = useState(false);
     const [listings, setListings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [featuredAd, setFeaturedAd] = useState({adsString:"", videoUrl:[""]});
@@ -59,9 +58,7 @@ const Home = () => {
         }
     });
 
-    const [message, setMessage] = useState('*');
     const [errorNotification, setErrorNotification] = useState<string>('');
-    const [errorMessage, setErrorMessage] = useState('');
     const [activeRotate, setActiveRotate] = useState(false);
     const [screenWidth, setScreenWidth] = useState<number>(600);
     const [repeatCount, setRepeatCount] = useState<number>(1);
@@ -187,17 +184,6 @@ const Home = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        if (openFilter) {
-            setRenderFilter(true); // монтируем блок
-            setTimeout(() => setAnimate(true), 10); // чуть позже активируем анимацию появления
-        } else {
-            setAnimate(false); // запускаем анимацию исчезновения
-            const timeout = setTimeout(() => setRenderFilter(false), 700); // размонтируем после анимации
-            return () => clearTimeout(timeout);
-        }
-    }, [openFilter]);
-
-    useEffect(() => {
         setFormData({
             listingType: filterState.listingType,
             minPrice: filterState.minPrice === "0" ? "" : filterState.minPrice, // Показываем пустоту вместо "0"
@@ -258,173 +244,6 @@ const Home = () => {
         }
     }, [dispatch]);
 
-    // const checkAuth = async () => {
-    //     try {
-    //         const response = await fetch(`${API_URL}/check-auth`, {
-    //             credentials: "include"
-    //         });
-    //         const data = await response.json();
-    //         if (data.isAuthenticated) {
-    //             // Синхронизация с localStorage
-    //             localStorage.setItem('registrationState', JSON.stringify({
-    //                 isRegistered: true,
-    //                 userName: data.user.name,
-    //                 userId: data.user.id,
-    //             }));
-    //         }
-    //     } catch (err) {
-    //         console.error('Auth check error:', err);
-    //     }
-    // };
-
-    Home.handleLogOut = async () => {
-        if (!confirm("Confirm continue deleting data!")) return;
-
-        try {
-            // 1. Получаем объявления пользователя ДО выхода
-            const listingsResponse = await fetch(
-                `${API_URL}/api/listings/ownerId/${encodeURIComponent(userId)}`,
-                { credentials: 'include' }
-            );
-
-            if (!listingsResponse.ok) {
-                const errorText = await listingsResponse.text();
-                throw new Error(`Failed to fetch listings: ${errorText}`);
-            }
-
-            const userListings = await listingsResponse.json();
-            const allImages = userListings.flatMap((l: any) => l.image);
-
-            // 2. Удаляем объявления и пользователя
-            if (userListings.length > 0) {
-                await handleDeleteListingByUserId();
-                await handleImageDelete(allImages);
-            }
-
-            // 3. Удаляем комментарии пользователя
-            await handleDeleteCommentByAuthorId(userId);
-
-            // 4. Удаляем только пользователя
-            await handleDeleteUserDataByUserId();
-
-            // 5. Теперь разрываем сессию и удаляем куки
-            const logoutResponse = await fetch(`${API_URL}/logout`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-
-            if (!logoutResponse.ok) {
-                const errorText = await logoutResponse.text();
-                throw new Error(`Logout failed: ${errorText}`);
-            }
-
-            // 6. Очистка клиентского состояния
-            dispatch(resetRegistration());
-            localStorage.removeItem('user');
-            localStorage.removeItem('registrationState');
-            localStorage.removeItem('userImages');
-
-            // 7. Обновляем список объявлений
-            const freshData = await fetchListings();
-            setListings(freshData);
-
-        } catch (error:any) {
-            setMessage(`Logout error: ${error.message}`);
-        }
-    };
-
-    const handleDeleteCommentByAuthorId = async(authorId:string) => {
-        try {
-            const response = await fetch(`${API_URL}/api/comments/author/${authorId}`, {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-            });
-            if (!response.ok) throw new Error('Delete failed');
-            setMessage(`Successful delete`)
-
-        } catch (error) {
-            setMessage(`Error delete comment: ${error}`);
-        }
-    }
-
-    const handleDeleteListingByUserId = async () => {
-        try {
-            const response = await fetch(
-                `${API_URL}/listings/ownerId/${encodeURIComponent(userId)}`,
-                {
-                    method: 'DELETE',
-                    credentials: 'include' // Важно для авторизации
-                }
-            );
-            if (!response.ok) {
-                const errorText = await response.text();
-                setErrorMessage(`Delete listings failed: ${errorText}`);
-                return;
-            }
-            const data = await response.json();
-            setMessage(`Success: ${data.message}  DeletedCount: ${data.deletedCount}`);
-            //setListings(prev => prev.filter((l: any) => l.owner !== userName));
-            setListings(prev => prev.filter((l: any) => l.ownerId !== userId));
-        } catch (error:any) {
-            setMessage(`Failed to delete User data: ${error.message}`)
-        }
-    };
-
-    const handleDeleteUserDataByUserId = async () => {
-        try {
-            const response = await fetch(`${API_URL}/api/users/${userId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            if (!response.ok) {
-                setErrorMessage(`Error: ${response.statusText}`)
-                throw new Error(`Error: ${response.statusText}`);
-            }
-            const data = await response.json();
-            setMessage(`Success: ${data.message}`);
-
-        } catch (error: any) {
-            setMessage(`Failed to delete User data: ${error.message}`);
-        }
-    };
-
-    const handleImageDelete = async (imageUrls: string[]) => {
-        try {
-            await Promise.all(
-                imageUrls.map(async (url) => {
-                    if (!url) return;
-
-                    const urlParts = url.split('/');
-                    const publicId = urlParts[urlParts.length - 1].split('.')[0];
-
-                    const signatureResponse = await fetch(`${API_URL}/generate-signature`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ public_id: publicId, timestamp: Math.floor(Date.now() / 1000) })
-                    });
-
-                    const data = await signatureResponse.json();
-
-                    await fetch(`https://api.cloudinary.com/v1_1/dndnmla09/image/destroy`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            public_id: publicId,
-                            api_key: data.api_key,
-                            timestamp: data.timestamp,
-                            signature: data.signature
-                        })
-                    });
-                })
-            );
-        } catch (error) {
-            console.error('Error deleting images:', error);
-            throw error;
-        }
-    };
-
     useEffect(() => {
         const getData = async () => {
             const data = await fetchListings();
@@ -432,7 +251,7 @@ const Home = () => {
             setLoading(false);
         };
         getData();
-    }, [message]);
+    }, []);
 
     useEffect(() => {
         const handleBeforeUnload = () => {
@@ -446,7 +265,7 @@ const Home = () => {
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload)
         };
-    }, [isRegistration, userName]); // Зависимости от состояния
+    }, [isRegistration, userName]); 
 
     const scrollToListings = () => {
         document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
@@ -454,7 +273,6 @@ const Home = () => {
 
     const handleResetFilters = () => {
         dispatch(resetFilter());
-        // Явный сброс локального состояния формы
         setFormData({
             listingType: "",
             minPrice: "",
@@ -482,14 +300,21 @@ const Home = () => {
                         <p className=" mb-6 xl:text-lg">{contents.offers[1].text}</p>
                         {/*{Explore the best properties for sale and rent.}*/}
                         <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
-                            <button onClick={scrollToListings} className="z-10">{contents.offers[2].text}</button>
-                            {/*Show all lists*/}
-                            <button type="button" onClick={() => {setOpenFilter((prev) => !prev); setShowFilter(false)}}
-                                    className="inline-flex items-center z-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#5f6368">
+                            <button
+                                onClick={scrollToListings}
+                                className="z-10 bg-[#2563EB] text-white hover:bg-blue-700 px-5 rounded-xl shadow-md min-h-[44px]"
+                            >
+                                {contents.offers[2].text}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {setOpenFilter((prev) => !prev); setShowFilter(false);}}
+                                className="inline-flex items-center gap-2 z-10 bg-white/10 text-white hover:bg-white/20 px-4 rounded-xl min-h-[44px]"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
                                     <path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z"/>
                                 </svg>
-                                {'\u00A0'}{'\u00A0'}{contents.offers[3].text} {/*Filters*/}
+                                {contents.offers[3].text}
                             </button>
                         </div>
 
@@ -499,67 +324,74 @@ const Home = () => {
                              className={`absolute top-[201px] left-[60%] -translate-x-1/2 -translate-y-full
                                          w-0 h-0 border-l-8 border-r-8 border-b-8 border-transparent border-b-gray-200`}
                         ></div>}
-                        {renderFilter && (
-                            <div className={`absolute z-10 left-1/2  mt-2 w-2/3 top-48
-                             bg-gray-200 p-4 text-sm text-gray-700 rounded-lg shadow-md  text-left
-                             transform -translate-x-1/2 transition-all duration-700 ease-in-out overflow-hidden
-                             before:top-0 before:left-1/2 before:-translate-x-1/2 before:-translate-y-full
-                             before:border-8 before:border-transparent before:border-b-gray-200 before:absolute
-                             ${animate ? "opacity-100 -translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"}`}
-                             >
+                        <AnimatePresence>
+                        {openFilter && (
+                            <motion.div
+                                key="card-filter"
+                                initial={{ opacity: 0, y: -10, x: "-50%" }}
+                                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                                exit={{ opacity: 0, y: -10, x: "-50%" }}
+                                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                className="absolute z-10 left-1/2 mt-2 w-2/3 max-w-[90vw] top-48
+                             bg-gray-100 p-4 text-sm text-gray-700 rounded-xl shadow-lg text-left
+                             overflow-hidden"
+                            >
                             <form onSubmit={handleSubmit}>
-                                <p>{contents.offers[4].text}</p>
-                                {/*{Please select a type of property}*/}
-                                <input type="radio" id="rent" name="listingType" value="rent"  onChange={handleChange}
-                                       checked={formData.listingType === "rent"} />
-                                    <label htmlFor="rent" className="ml-2">{contents.offers[5].text}</label><br></br>
-                                {/*{For rent}*/}
-                                <input type="radio" id="sale" name="listingType" value="sale"  onChange={handleChange}
-                                       checked={formData.listingType === "sale"} />
-                                    <label htmlFor="sale" className="ml-2">{contents.offers[6].text}</label>
-                                {/*{For sale}*/}
-                                <p className="mt-3" style={{borderTop:"1px solid darkgray"}}>{contents.offers[7].text}</p>
-                                {/*{Please select a features of real estate}*/}
-                                <input type="radio" id="flat" name="propertyType" value="flat"  onChange={handleChange}
-                                       checked={formData.propertyType === "flat"} />
-                                <label htmlFor="flat" className="ml-2">{contents.offers[8].text}</label><br></br>
-                                {/*{Apartment}*/}
-                                <input type="radio" id="private" name="propertyType" value="private house"  onChange={handleChange}
-                                       checked={formData.propertyType === "private house"} />
-                                <label htmlFor="private" className="ml-2">{contents.offers[9].text}</label><br></br>
-                                {/*{Private house}*/}
-                                <input type="radio" id="commercial" name="propertyType" value="commercial real estate"  onChange={handleChange}
-                                       checked={formData.propertyType === "commercial real estate"} />
-                                <label htmlFor="commercial" className="ml-2">{contents.offers[10].text}</label>
-                                {/*{Commercial real estate}*/}
-                                <p className="mt-3" style={{borderTop:"1px solid darkgray"}}>{contents.offers[11].text}</p>
-                                {/*{Please select a range of acceptable prices}*/}
-                                <div className="flex flex-row gap-8 mb-3">
-                                    <input type="number" id="minPrice" name="minPrice"
-                                           onChange={handleChange} value={formData.minPrice}
-                                           className="border p-2 w-1/3 rounded-md" placeholder="Minimum"/>
-                                    <input type="number" id="maxPrice" name="maxPrice"
-                                           onChange={handleChange} value={formData.maxPrice}
-                                           className="border p-2 w-1/3 rounded-md" placeholder="Maximum"/>
+                                <p className="font-medium mb-1">{contents.offers[4].text}</p>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="listingType" value="rent" onChange={handleChange} checked={formData.listingType === "rent"} />
+                                    {contents.offers[5].text}
+                                </label>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="listingType" value="sale" onChange={handleChange} checked={formData.listingType === "sale"} />
+                                    {contents.offers[6].text}
+                                </label>
+
+                                <p className="font-medium mt-2 pt-2 border-t border-gray-300">{contents.offers[7].text}</p>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="propertyType" value="flat" onChange={handleChange} checked={formData.propertyType === "flat"} />
+                                    {contents.offers[8].text}
+                                </label>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="propertyType" value="private house" onChange={handleChange} checked={formData.propertyType === "private house"} />
+                                    {contents.offers[9].text}
+                                </label>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="propertyType" value="commercial real estate" onChange={handleChange} checked={formData.propertyType === "commercial real estate"} />
+                                    {contents.offers[10].text}
+                                </label>
+
+                                <p className="font-medium mt-2 pt-2 border-t border-gray-300">{contents.offers[11].text}</p>
+                                <div className="flex flex-row gap-4 mb-3">
+                                    <input type="number" name="minPrice" onChange={handleChange} value={formData.minPrice}
+                                           className="border p-2 w-1/2 rounded-xl min-h-[44px]" placeholder="Minimum"/>
+                                    <input type="number" name="maxPrice" onChange={handleChange} value={formData.maxPrice}
+                                           className="border p-2 w-1/2 rounded-xl min-h-[44px]" placeholder="Maximum"/>
                                 </div>
 
-                                <p style={{borderTop:"1px solid darkgray"}}>{contents.offers[12].text}</p>
-                                {/*{Sort lists by posting date}*/}
-                                <input type="radio" id="newToOld" name="novelty" value="newToOld" onChange={handleChange} checked={formData.novelty === "newToOld"}/>
-                                <label htmlFor="rent" className="ml-2"></label>{contents.offers[13].text}<br></br>
-                                {/*{From new to old}*/}
-                                <input type="radio" id="oldToNew" name="novelty" value="oldToNew" onChange={handleChange} checked={formData.novelty === "oldToNew"}/>
-                                <label htmlFor="oldToNew" className="ml-2">{contents.offers[14].text}</label><br/>
-                                {/*{From old to new}*/}
-                                <button type="submit" onClick={scrollToListings}
-                                        className="mt-4 bg-blue-500 text-white p-2 rounded-md w-1/3 mr-8">
-                                    {contents.offers[15].text}
-                                    {/*{Search}*/}
-                                </button>
-                                <button className="bg-yellow-300" onClick={handleResetFilters}>{contents.offers[16].text}</button>
-                                {/*{Reset Filters}*/}
+                                <p className="font-medium pt-2 border-t border-gray-300">{contents.offers[12].text}</p>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="novelty" value="newToOld" onChange={handleChange} checked={formData.novelty === "newToOld"} />
+                                    {contents.offers[13].text}
+                                </label>
+                                <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                    <input type="radio" name="novelty" value="oldToNew" onChange={handleChange} checked={formData.novelty === "oldToNew"} />
+                                    {contents.offers[14].text}
+                                </label>
+
+                                <div className="flex gap-3 mt-3 pt-2 border-t border-gray-300">
+                                    <button type="submit" onClick={scrollToListings}
+                                            className="bg-[#2563EB] text-white px-4 rounded-xl flex-1 min-h-[44px]">
+                                        {contents.offers[15].text}
+                                    </button>
+                                    <button type="button" onClick={handleResetFilters}
+                                            className="bg-[#F59E0B] text-white px-4 rounded-xl min-h-[44px]">
+                                        {contents.offers[16].text}
+                                    </button>
+                                </div>
                             </form>
-                        </div>)}
+                        </motion.div>)}
+                        </AnimatePresence>
 
 
                         <div className={`absolute z-42 justify-center top-[28px] flex flex-row gap-[44%] w-full pt-96`}>
@@ -573,74 +405,66 @@ const Home = () => {
                                     </svg>
                                 </div>
                             </div>
-                            {showFilter && <div className={`absolute z-20 left-[50%]  top-44 w-[43%]
-                             bg-gray-200 p-4 text-sm text-gray-700 rounded-lg shadow-md  text-left
-                             transform -translate-x-1/2 transition-all duration-700 ease-in-out overflow-hidden
-                             before:top-0 before:left-1/2 before:-translate-x-1/2 before:-translate-y-full
-                             before:border-8 before:border-transparent before:border-b-gray-200 before:absolute`}>
-                                <form onSubmit={handleSubmitMapFilter} >
-                                    <p className="mb-2 text-xs md:text-sm">{contents.offers[17].text}</p>
-                                    {/*{Select the location you are looking for}*/}
+                            <AnimatePresence>
+                            {showFilter && <motion.div
+                                key="map-filter"
+                                initial={{ opacity: 0, y: -10, x: "-50%" }}
+                                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                                exit={{ opacity: 0, y: -10, x: "-50%" }}
+                                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                className="absolute z-20 left-[50%] top-44 w-[43%] max-w-[90vw]
+                             bg-gray-100 p-4 text-sm text-gray-700 rounded-xl shadow-lg text-left">
+                                <form onSubmit={handleSubmitMapFilter}>
+                                    <p className="font-medium mb-1">{contents.offers[17].text}</p>
                                     <input type="text"
                                            name="destination"
-                                           size={36}
                                            value={formMapFilter.destination}
                                            onChange={handleChangeMapFilter}
                                            placeholder={contents.offers[18].text}
-                                           className="w-full mb-2" />
-                                    <p className="mb-2 text-xs md:text-sm" style={{borderTop:"1px solid darkgray"}}>{contents.offers[19].text}</p>
-                                    {/*{Select search range}*/}
-                                    <input type="range"
-                                           name="rangeValue"
-                                           min="0"
-                                           max="40"
+                                           className="w-full mb-2 rounded-xl border px-3 min-h-[44px]" />
+                                    <p className="font-medium pt-2 border-t border-gray-300 mb-1">{contents.offers[19].text}</p>
+                                    <input type="range" name="rangeValue" min="0" max="40"
                                            value={formMapFilter.rangeValue}
-                                        //onChange={(e) => setRangeValue(Number(e.target.value))}
                                            onChange={handleChangeMapFilter}
                                            className="w-full"/>
-                                    <div className="text-left text-gray-700 font-medium mb-2">
-                                        <p className="text-xs md:text-sm">
-                                            {contents.offers[20].text}{formMapFilter.rangeValue}km
-                                        </p>
+                                    <p className="text-xs mb-2">{contents.offers[20].text}{formMapFilter.rangeValue}km</p>
+
+                                    <p className="font-medium pt-2 border-t border-gray-300">{contents.offers[4].text}</p>
+                                    <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                        <input type="radio" name="listingType" value="rent" onChange={handleChangeMapFilter} checked={formMapFilter.listingType === "rent"} />
+                                        {contents.offers[5].text}
+                                    </label>
+                                    <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                        <input type="radio" name="listingType" value="sale" onChange={handleChangeMapFilter} checked={formMapFilter.listingType === "sale"} />
+                                        {contents.offers[6].text}
+                                    </label>
+
+                                    <p className="font-medium pt-2 border-t border-gray-300">{contents.offers[7].text}</p>
+                                    <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                        <input type="radio" name="propertyType" value="flat" onChange={handleChangeMapFilter} checked={formMapFilter.propertyType === "flat"} />
+                                        {contents.offers[8].text}
+                                    </label>
+                                    <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                        <input type="radio" name="propertyType" value="private house" onChange={handleChangeMapFilter} checked={formMapFilter.propertyType === "private house"} />
+                                        {contents.offers[9].text}
+                                    </label>
+                                    <label className="flex items-center gap-2 py-2 cursor-pointer">
+                                        <input type="radio" name="propertyType" value="commercial real estate" onChange={handleChangeMapFilter} checked={formMapFilter.propertyType === "commercial real estate"} />
+                                        {contents.offers[10].text}
+                                    </label>
+
+                                    <div className="flex gap-3 mt-3 pt-2 border-t border-gray-300">
+                                        <button type="submit" className="bg-[#2563EB] text-white px-3 rounded-xl flex-1 min-h-[44px]">
+                                            {contents.offers[15].text}
+                                        </button>
+                                        <button type="button" onClick={handleResetMapFilter}
+                                                className="bg-[#F59E0B] text-white px-3 rounded-xl min-h-[44px]">
+                                            {contents.offers[16].text}
+                                        </button>
                                     </div>
-                                    <p style={{borderTop:"1px solid darkgray"}} className="text-xs md:text-sm">{contents.offers[4].text}</p>
-                                    {/*{Please select a type of property}*/}
-                                    <input type="radio" id="rent" name="listingType" value="rent"  onChange={handleChangeMapFilter}
-                                           checked={formMapFilter.listingType === "rent"} />
-                                    <label htmlFor="rent" className="ml-2 text-xs md:text-sm">{contents.offers[5].text}</label><br></br>
-                                    {/*{For rent}*/}
-                                    <input type="radio" id="sale" name="listingType" value="sale"  onChange={handleChangeMapFilter}
-                                           checked={formMapFilter.listingType === "sale"} className={"mb-2"} />
-                                    <label htmlFor="sale" className="ml-2 text-xs md:text-sm">{contents.offers[6].text}</label><br></br>
-                                    {/*{For sale}*/}
-                                    <p style={{borderTop:"1px solid darkgray"}} className="text-xs md:text-sm">{contents.offers[7].text}</p>
-                                    {/*{Please select a features of real estate}*/}
-                                    <input type="radio" id="flat" name="propertyType" value="flat"  onChange={handleChangeMapFilter}
-                                           checked={formMapFilter.propertyType === "flat"} />
-                                    <label htmlFor="flat" className="ml-2 text-xs md:text-sm">{contents.offers[8].text}</label><br></br>
-                                    {/*{Apartment}*/}
-                                    <input type="radio" id="private" name="propertyType" value="private house"  onChange={handleChangeMapFilter}
-                                           checked={formMapFilter.propertyType === "private house"} />
-                                    <label htmlFor="private" className="ml-2 text-xs md:text-sm">{contents.offers[9].text}</label><br></br>
-                                    {/*{Private house}*/}
-                                    <input type="radio" id="commercial" name="propertyType" value="commercial real estate"  onChange={handleChangeMapFilter}
-                                           checked={formMapFilter.propertyType === "commercial real estate"} />
-                                    <label htmlFor="commercial" className="ml-2 text-xs md:text-sm">{contents.offers[10].text}</label><br/>
-                                    {/*{Commercial real estate}*/}
-                                    <button type="submit" className="mt-8 bg-blue-500 text-white px-2 md:px-4 rounded-md mr-2 md:mr-4">
-                                        <p className="text-xs md:text-sm">
-                                            {contents.offers[15].text} {/*{Search}*/}
-                                        </p>
-                                    </button>
-                                    <button
-                                        type="button" onClick={handleResetMapFilter}
-                                        className="bg-yellow-300 px-2 md:px-4 hover:bg-yellow-400 text-grey-500">
-                                        <p className="text-xs md:text-sm">
-                                            {contents.offers[16].text} {/*{Reset Filter}*/}
-                                        </p>
-                                    </button>
                                 </form>
-                            </div>}
+                            </motion.div>}
+                            </AnimatePresence>
 
                             {!openFilter && <div className="absolute w-[86%] mt-[-21px]"
                                              style={!activeRotate ? {transform: "rotateX(-74deg) translateY(-1740px) translateX(0px)",
@@ -649,18 +473,17 @@ const Home = () => {
                                              onClick={() => setActiveRotate(true)}
                             ><div className="relative w-full duration-300 ease-in-out hover:scale-100">
                                 {activeRotate && <button  onClick={(e)=>{e.stopPropagation(); setActiveRotate(false)}}
-                                                          className="absolute top-3 z-[21] py-1 rounded-[4px] bg-red-100 text-gray-700">
+                                                          className="absolute top-3 z-[2001] py-1 rounded-[4px] bg-red-100 text-gray-700">
                                     {contents.offers[31].text}
                                     {/*{Collapse map}*/}
                                 </button>}
-                                <div className="w-full ">
+                                <div className={`w-full mt-[-18px]`}>
                                     <LeafletMaps listings={listings} formMapFilter={filterMapState} isVisible={activeRotate} />
                                 </div>
                             </div>
                             </div>}
 
                             <div className="h-[82px] w-[40px] border-white border-1 rounded-tr-lg rounded-br-lg flex"
-                                 //className="absolute z-1 right-[19%]  top-[428px] center"
                                  style={  {boxShadow: 'inset 3px 3px 12px rgba(0, 0, 0, 0.6)',background:'#fff',cursor:'pointer'}}
                                  onClick={()=>setOpenInfo(prev=>!prev)}>
                                 <div  style={{justifyItems:'center',alignContent:'center',marginLeft:'8px'}}>
@@ -672,11 +495,15 @@ const Home = () => {
                                     </svg>
                                 </div>
                             </div>
-                            {openInfo && <div className={`absolute z-20 top-44 w-[43%] left-[50%] text-xs sm:text-sm
-                             bg-gray-200 p-2 sm:p-4 text-sm text-gray-700 rounded-lg shadow-md  text-left
-                             transform -translate-x-1/2 transition-all duration-700 ease-in-out overflow-hidden
-                             before:top-0 before:left-1/2 before:-translate-x-1/2 before:-translate-y-full
-                             before:border-8 before:border-transparent before:border-b-gray-200 before:absolute`} id={`info`}>
+                            <AnimatePresence>
+                            {openInfo && <motion.div
+                                key="info-panel"
+                                initial={{ opacity: 0, y: -10, x: "-50%" }}
+                                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                                exit={{ opacity: 0, y: -10, x: "-50%" }}
+                                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                                className="absolute z-20 top-44 w-[43%] max-w-[90vw] left-[50%] text-xs sm:text-sm
+                             bg-gray-100 p-3 sm:p-4 text-gray-700 rounded-xl shadow-lg text-left" id="info">
                                 {contents.offers[21].text}<br/>
                                 {contents.offers[22].text}<br/>
                                 {contents.offers[23].text}<br/>
@@ -688,7 +515,8 @@ const Home = () => {
                                 {contents.offers[29].text}<br/>
                                 <p className="hidden sm:block">{contents.offers[30].text}</p>
 
-                            </div>}
+                            </motion.div>}
+                            </AnimatePresence>
 
                         </div>
 
@@ -704,34 +532,32 @@ const Home = () => {
                             {(isRegistration && isAuthenticated) ? <p className="text-lg mb-6 text-yellow-300">{contents.offers[34].text}</p> :
                                 <p className="text-lg mb-6">{contents.offers[35].text}</p>}
                             {/*{fill out the form with your property details. : Your offer will reach the right audience right away.}*/}
-                            {authChecking ? <div className="flex justify-center space-x-6 opacity-0 pointer-events-none">
-                                {/* скелетон на время проверки сессии — избегаем мигания кнопок */}
-                                <button className="w-28 h-10 bg-gray-600 rounded animate-pulse" />
-                                <button className="w-28 h-10 bg-gray-600 rounded animate-pulse" />
-                            </div> : (isRegistration && isAuthenticated) ? <div className="flex justify-center space-x-6">
-                                <Link to="listings/new/rent" className="text-gray-700">
-                                    <button>
-                                        {contents.offers[5].text} {/*{For rent}*/}
+                            {authChecking ? <div className="flex justify-center gap-4 opacity-0 pointer-events-none">
+                                <button className="w-28 min-h-[44px] bg-gray-600 rounded-xl animate-pulse" />
+                                <button className="w-28 min-h-[44px] bg-gray-600 rounded-xl animate-pulse" />
+                            </div> : (isRegistration && isAuthenticated) ? <div className="flex justify-center flex-wrap gap-4">
+                                <Link to="listings/new/rent">
+                                    <button className="bg-[#2563EB] text-white hover:bg-blue-700 px-6 rounded-xl shadow-md min-h-[44px]">
+                                        {contents.offers[5].text}
                                     </button>
                                 </Link>
-                                <Link to="listings/new/sale" className="text-gray-700">
-                                    <button>
-                                        {contents.offers[6].text} {/*{For sale}*/}
+                                <Link to="listings/new/sale">
+                                    <button className="bg-[#F59E0B] text-white hover:bg-yellow-500 px-6 rounded-xl shadow-md min-h-[44px]">
+                                        {contents.offers[6].text}
                                     </button>
                                 </Link>
-                            </div> : <div className="flex justify-center space-x-6">
+                            </div> : <div className="flex justify-center flex-wrap gap-4">
                                 {!isRegistration && <Link to="registration">
-                                    <button>{contents.offers[36].text}</button>
-                                    {/*{Sign Up}*/}
+                                    <button className="bg-[#2563EB] text-white hover:bg-blue-700 px-6 rounded-xl shadow-md min-h-[44px]">
+                                        {contents.offers[36].text}
+                                    </button>
                                 </Link>}
                                 <Link to="login">
-                                    <button>{contents.offers[37].text}</button>
-                                    {/*{Log In}*/}
+                                    <button className="bg-white/15 text-white hover:bg-white/25 border border-white/30 px-6 rounded-xl min-h-[44px]">
+                                        {contents.offers[37].text}
+                                    </button>
                                 </Link>
                             </div>}
-                            {/*<p style={failed ? {color:"red"} : {color:"green"}} >{message}</p>*/}
-                            {/*{message && <p>{message}:{userName}:{userId}</p>}*/}
-                            {/*{errorMessage && <p>{errorMessage}</p> }*/}
                         </div>
 
                         <section id={`advertisement`} className="mx-auto mt-12 mb-4 w-[78%]">
@@ -740,7 +566,7 @@ const Home = () => {
                                 <div className="flex whitespace-nowrap animate-marquee">
                                     {[...Array(repeatCount)].map((_, i) => (
                                         <p key={i} className="mx-4 text-lg font-bold text-white">
-                                            {featuredAd.adsString || (language === "en" ? "Your services can be advertised here" : "На цьому місці могла б бути ваша реклама")}{errorNotification}
+                                            {featuredAd.adsString || contents.offers[41].text}{errorNotification}
                                         </p>
                                     ))}
                                 </div>
@@ -749,14 +575,70 @@ const Home = () => {
                             {featuredAd.videoUrl[0] ? (
                                 <video controls autoPlay muted loop src={featuredAd.videoUrl[0]} />
                             ) : (
-                                <div className="w-full bg-gray-800 rounded-lg flex flex-col items-center justify-center"
-                                     style={{ aspectRatio: "16/9" }}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" height="52px" viewBox="0 -960 960 960" width="52px" fill="#4b5563">
-                                        <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h480q33 0 56.5 23.5T720-720v180l160-160v440L720-420v180q0 33-23.5 56.5T640-160H160Zm0-80h480v-480H160v480Zm0 0v-480 480Z"/>
-                                    </svg>
-                                    <p className="text-gray-500 mt-3 text-sm">
-                                        {language === "en" ? "Loading video…" : "Завантаження відео…"}
-                                    </p>
+                                <div className="w-full rounded-lg overflow-hidden relative"
+                                     style={{ aspectRatio: "16/9", background: 'linear-gradient(180deg, #0b1120 0%, #1a2744 60%, #243040 100%)' }}>
+                                    {/* Moon */}
+                                    <div className="absolute top-[10%] right-[8%] w-8 h-8 rounded-full"
+                                         style={{ background: '#fef9c3', boxShadow: '0 0 28px 12px rgba(254,249,195,0.1)' }} />
+                                    {/* Stars */}
+                                    {[
+                                        { s: 2, t: '8%',  l: '6%',  dur: 2.1, del: 0   },
+                                        { s: 1, t: '14%', l: '19%', dur: 3.1, del: 0.6 },
+                                        { s: 2, t: '7%',  l: '37%', dur: 2.6, del: 1.0 },
+                                        { s: 1, t: '19%', l: '52%', dur: 2.0, del: 0.3 },
+                                        { s: 2, t: '11%', l: '71%', dur: 2.4, del: 1.3 },
+                                        { s: 1, t: '5%',  l: '84%', dur: 3.0, del: 0.8 },
+                                        { s: 1, t: '22%', l: '29%', dur: 2.9, del: 0.4 },
+                                        { s: 2, t: '13%', l: '62%', dur: 1.9, del: 1.1 },
+                                    ].map((star, i) => (
+                                        <motion.div key={i} className="absolute rounded-full bg-white"
+                                            style={{ width: star.s, height: star.s, top: star.t, left: star.l }}
+                                            animate={{ opacity: [0.2, 1, 0.2] }}
+                                            transition={{ repeat: Infinity, duration: star.dur, delay: star.del, ease: 'easeInOut' }}
+                                        />
+                                    ))}
+                                    {/* Buildings */}
+                                    <div className="absolute bottom-0 left-0 right-0 h-full flex items-end justify-center gap-[1%] px-[3%]">
+                                        {[
+                                            { w: '7%',  h: '38%', bg: '#2d3748', wDur: 3.2, wDel: 0.5, del: 0.55 },
+                                            { w: '10%', h: '57%', bg: '#1e3a5f', wDur: 2.8, wDel: 1.1, del: 0.4  },
+                                            { w: '8%',  h: '70%', bg: '#1e2d45', wDur: 3.5, wDel: 0.2, del: 0.25 },
+                                            { w: '13%', h: '47%', bg: '#2d3748', wDur: 2.5, wDel: 0.8, del: 0.1  },
+                                            { w: '9%',  h: '80%', bg: '#162035', wDur: 3.0, wDel: 0,   del: 0    },
+                                            { w: '11%', h: '52%', bg: '#1e3a5f', wDur: 2.7, wDel: 1.3, del: 0.15 },
+                                            { w: '8%',  h: '63%', bg: '#1e2d45', wDur: 3.3, wDel: 0.6, del: 0.3  },
+                                            { w: '10%', h: '43%', bg: '#2d3748', wDur: 2.9, wDel: 0.9, del: 0.45 },
+                                            { w: '6%',  h: '34%', bg: '#2d3748', wDur: 3.1, wDel: 0.4, del: 0.6  },
+                                        ].map((b, i) => (
+                                            <motion.div key={i} className="relative flex-shrink-0"
+                                                style={{ width: b.w, height: b.h, background: b.bg, transformOrigin: 'bottom' }}
+                                                initial={{ scaleY: 0 }}
+                                                animate={{ scaleY: 1 }}
+                                                transition={{ duration: 0.75, delay: b.del, ease: 'backOut' }}
+                                            >
+                                                <motion.div className="absolute inset-[8%]"
+                                                    style={{
+                                                        backgroundImage: 'radial-gradient(circle, rgba(255,235,120,0.9) 1px, transparent 1px)',
+                                                        backgroundSize: '6px 8px',
+                                                    }}
+                                                    animate={{ opacity: [0.25, 0.8, 0.25] }}
+                                                    transition={{ repeat: Infinity, duration: b.wDur, delay: b.wDel, ease: 'easeInOut' }}
+                                                />
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                    {/* Ground line */}
+                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-600" />
+                                    {/* Loading indicator */}
+                                    <div className="absolute bottom-3 left-0 right-0 flex justify-center items-center gap-1">
+                                        <p className="text-slate-400 text-xs sm:text-sm mr-1">{contents.offers[42].text}</p>
+                                        {[0, 0.3, 0.6].map((del, i) => (
+                                            <motion.span key={i} className="w-1 h-1 rounded-full bg-slate-400 inline-block"
+                                                animate={{ opacity: [0.2, 1, 0.2] }}
+                                                transition={{ repeat: Infinity, duration: 1.2, delay: del, ease: 'easeInOut' }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 

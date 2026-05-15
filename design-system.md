@@ -222,9 +222,17 @@ Avoid:
 
 Prioritize:
 - thumb-friendly interactions
-- large tap areas
+- large tap areas (minimum 44×44px)
 - bottom spacing
 - responsive cards
+
+Rules (enforced in CLAUDE.md):
+- No hover-only open/close — all interactions must work via tap
+- Dropdowns close via pointerdown outside (useRef pattern)
+- Layout switching via Tailwind breakpoints only (no JS resize listeners)
+- Mobile menu hidden with `pointer-events-none`, not invisible width tricks
+- Absolute panels: max-w-[90vw], no viewport overflow
+- Radio/checkbox inputs: wrapped in label with py-2 padding
 
 ---
 

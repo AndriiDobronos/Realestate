@@ -1,4 +1,3 @@
-import React from 'react'
 import type { RootState } from '../../app/store'
 import { useSelector, useDispatch } from 'react-redux'
 import { decrement, increment,incrementByAmount } from './counterSlice'

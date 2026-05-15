@@ -43,12 +43,12 @@ function App() {
                         <Route path="addAgent/:agentId" element={<AddAgent />} />
                         <Route path="registration" element={<RegistrationForm  />} />
                         <Route path="myComments" element={<MyComments />} />
-                        <Route path="imageUpLoader" element={<ImageUpLoader />} />
-                        <Route path="videoUpLoader" element={<VideoUpLoader  />} />
+                        <Route path="imageUpLoader" element={<ImageUpLoader index={0} onUploadComplete={() => {}} />} />
+                        <Route path="videoUpLoader" element={<VideoUpLoader onUploadComplete={() => {}} />} />
                         <Route path="advertising" element={<AdvertisingVideoService  />} />
                         <Route path="login" element={<Login />} />
                         <Route path="details/:id" element={<Details />} />
-                        <Route path="leafletMaps" element={<LeafletMaps listings formMapFilter isVisible/>} />
+                        <Route path="leafletMaps" element={<LeafletMaps listings={[]} formMapFilter={null} isVisible />} />
                         <Route path="myListings" element={<MyListings  />} />
                         <Route path="myNotification" element={<MyNotification  />} />
                         <Route path="notification" element={<Notification />} />
