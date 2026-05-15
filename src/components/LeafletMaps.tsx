@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import L from "leaflet";
 import "leaflet-control-geocoder";
-import "./LeafletMaps.css";
 
 const COORDS_CACHE_KEY = "coordsCache";
 const GEOCODE_DELAY_MS = 1200; // Nominatim usage policy: max 1 req/sec
@@ -29,8 +28,8 @@ function buildMarker(listing: any, lat: number, lon: number): L.Marker {
     const bgColor = listing.listingType === "rent" ? "#2563EB" : "#F59E0B";
     return L.marker([lat, lon], {
         icon: L.divIcon({
-            className: "custom-marker",
-            html: `<div class="price-tag" style="background:${bgColor}">$${listing.price}</div>`,
+            className: "relative",
+            html: `<div style="color:white;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:12px;white-space:nowrap;position:absolute;z-index:1000;background:${bgColor}">$${listing.price}</div>`,
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         }),
@@ -38,7 +37,9 @@ function buildMarker(listing: any, lat: number, lon: number): L.Marker {
         <div>
             <strong>${listing.propertyType}</strong><br/>
             $${listing.price}<br/>
-            <a href="/details/${listing._id}" id="a">View details</a>
+            <a href="/details/${listing._id}" style="font-weight:bold"
+               onmouseover="this.style.textDecoration='underline';this.style.color='blue'"
+               onmouseout="this.style.textDecoration='none';this.style.color=''">View details</a>
         </div>
     `);
 }
