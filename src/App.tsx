@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import './App.css'
 import {Home} from "./pages/Home";
@@ -25,6 +26,17 @@ import RealEstateEstimator from "./components/RealEstateEstimator";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
 import PromotionYourListing from './pages/PromotionYourListing';
+import SubscriptionToServices from './pages/SubscriptionToServices';
+
+const ScrollToTop = () => {
+    const { pathname } = useLocation();
+    useEffect(() => {
+        if (pathname !== '/') {
+            window.scrollTo(0, 0);
+        }
+    }, [pathname]);
+    return null;
+};
 
 function App() {
     const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -32,6 +44,7 @@ function App() {
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <LanguageProvider>
                 <BrowserRouter>
+                    <ScrollToTop />
                     <Header />
                     <Routes>
                         <Route path="/" element={<Home />} />
@@ -58,6 +71,7 @@ function App() {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password"  element={<ResetPassword />} />
                         <Route path="promotionYourListing" element={<PromotionYourListing />} />
+                        <Route path="subscribeToPremiumServices" element={<SubscriptionToServices />} />
                     </Routes>
                 </BrowserRouter>
             </LanguageProvider>

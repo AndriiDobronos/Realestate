@@ -1,18 +1,23 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import houseImage from "../assets/house_img.webp";
 import { Link, useLocation } from 'react-router-dom';
-import {RootState} from "../app/store";
 import { useSelector, useDispatch } from 'react-redux';
-import {setIsRegistration, setUserName, setUserId} from "../features/registration/registrationSlice";
-import {setImages} from "../features/upLoadImages/upLoadImagesSlice";
-import { setFilterCriteria, resetFilter } from "../features/filter/filterSlice";
-import { setFilterFeatures, resetMapFilter} from "../features/filterMap/filterMapSlice";
-import {fetchListings} from "../services/ListingService";
-import LoadingSkeleton from "../../src/components/LoadingSkeleton";
-import Footer from "../components/Footer";
-import LeafletMaps from "../components/LeafletMaps";
-import ListingCard from "../components/ListingCard";
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../services/useAuth';
+import { RootState } from '../app/store';
+import { setIsRegistration, setUserName, setUserId } from '../features/registration/registrationSlice';
+import { setImages } from '../features/upLoadImages/upLoadImagesSlice';
+import { setFilterCriteria, resetFilter } from '../features/filter/filterSlice';
+import { setFilterFeatures, resetMapFilter } from '../features/filterMap/filterMapSlice';
+import { setScrollY } from '../features/scroll/scrollSlice';
+import { fetchListings } from '../services/ListingService';
+import allEnTexts from '../contents/allEnTexts';
+import allUaTexts from '../contents/allUaTexts';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import Footer from '../components/Footer';
+import LeafletMaps from '../components/LeafletMaps';
+import ListingCard from '../components/ListingCard';
+import houseImage from '../assets/house_img.webp';
 
 interface HomeListing {
     _id: string;
@@ -31,11 +36,6 @@ interface HomeListing {
     numberOfFloor?: number;
     numberOfStoreysOfBuilding?: number;
 }
-import { setScrollY } from '../features/scroll/scrollSlice';
-import { useLanguage } from '../context/LanguageContext';
-import allEnTexts from '../contents/allEnTexts';
-import allUaTexts from '../contents/allUaTexts';
-import { useAuth } from '../services/useAuth';
 
 const Home = () => {
     const { language } = useLanguage();
@@ -100,27 +100,22 @@ const Home = () => {
         propertyType: '',
     };
     const handleSaveScrollPosition = () => {
-        dispatch(setScrollY(window.scrollY)); // сохраняем scroll перед переходом
+        dispatch(setScrollY(window.scrollY));
         localStorage.setItem('scrollPosition', window.scrollY.toString());
     };
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
-        // Обновляем ширину экрана при первом рендере и при ресайзе
         const updateWidth = () => setScreenWidth(window.innerWidth || 600);
         updateWidth();
-
         window.addEventListener('resize', updateWidth);
         return () => window.removeEventListener('resize', updateWidth);
     }, []);
 
     useEffect(() => {
-        // Оцениваем примерную длину строки в пикселях (грубая оценка)
-        const estimatedTextWidth = featuredAd.adsString.length * 10 || 150; // 10px на символ (зависит от шрифта)
-
-        // Минимум 2 повторения для непрерывности
-        const count = Math.ceil(screenWidth / estimatedTextWidth) + 2;
-        setRepeatCount(count);
+        // approx 10px per character; +2 repetitions to ensure seamless loop
+        const estimatedTextWidth = featuredAd.adsString.length * 10 || 150;
+        setRepeatCount(Math.ceil(screenWidth / estimatedTextWidth) + 2);
     }, [screenWidth, featuredAd.adsString]);
 
     useEffect(() => {
@@ -169,17 +164,14 @@ const Home = () => {
     }, [scrollY]);
 
     useEffect(() => {
-        if (!loading && scrollY > 0) {  // Ждем завершения загрузки данных и рендера контента
+        if (!loading && scrollY > 0) {
+            // small delay to ensure content is rendered before restoring scroll
             const timer = setTimeout(() => {
-                window.scrollTo({
-                    top: scrollY,
-                    behavior: 'auto'   //'smooth'
-                });
-            }, 300); // Небольшая задержка для гарантии рендера контента
-
+                window.scrollTo({ top: scrollY, behavior: 'auto' });
+            }, 300);
             return () => clearTimeout(timer);
         }
-    }, [loading, scrollY]); // Добавляем loading в зависимости
+    }, [loading, scrollY]);
 
     useEffect(() => {
         if (!loading && toNewListingScroll > 0) {
@@ -195,18 +187,10 @@ const Home = () => {
     }, [loading, toNewListingScroll]);
 
     useEffect(() => {
-        const savedPosition = localStorage.getItem('scrollPosition');
-        if (savedPosition) {
-            dispatch(setScrollY(Number(savedPosition)));
-            localStorage.removeItem('scrollPosition');
-        }
-    }, [dispatch]);
-
-    useEffect(() => {
         setFormData({
             listingType: filterState.listingType,
-            minPrice: filterState.minPrice === "0" ? "" : filterState.minPrice, // Показываем пустоту вместо "0"
-            maxPrice: filterState.maxPrice === "100000000" ? "" : filterState.maxPrice, // Показываем пустоту вместо "100000000"
+            minPrice: filterState.minPrice === "0" ? "" : filterState.minPrice,
+            maxPrice: filterState.maxPrice === "100000000" ? "" : filterState.maxPrice,
             novelty: filterState.novelty,
             propertyType: filterState.propertyType,
         });
@@ -253,7 +237,6 @@ const Home = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        // Восстановление из localStorage при загрузке
         const savedState = localStorage.getItem('registrationState');
         if (savedState) {
             const { isRegistered, userName, userId } = JSON.parse(savedState);
@@ -314,11 +297,8 @@ const Home = () => {
                 <div className="relative w-full  flex mt-16 flex-col lg:flex-row">
 
                     <div id="leftSide" className="text-center py-10 relative min-h-[80%] lg:w-1/2">
-                        {/*{container}*/}
                         <h2 className="text-2xl sm:text-4xl font-bold mb-4">{contents.offers[0].text}</h2>
-                        {/*{Find Your Dream Home}*/}
                         <p className=" mb-6 xl:text-lg">{contents.offers[1].text}</p>
-                        {/*{Explore the best properties for sale and rent.}*/}
                         <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
                             <button
                                 onClick={scrollToListings}
@@ -415,7 +395,6 @@ const Home = () => {
 
 
                         <div className={`absolute z-42 justify-center top-[28px] flex flex-row gap-[44%] w-full pt-96`}>
-                        {/*${!activeRotate ? "pt-96" : "pt-96"}*/}
                             <div className=" h-[82px] w-[40px] border-white border-1 rounded-tl-lg rounded-bl-lg flex"
                                  style={  {boxShadow: 'inset 3px 3px 12px rgba(0, 0, 0, 0.6)',background:'#fff',cursor:'pointer'}}
                                  onClick={()=>{setShowFilter(prev=>!prev); setOpenInfo(false)}} >
@@ -495,7 +474,6 @@ const Home = () => {
                                 {activeRotate && <button  onClick={(e)=>{e.stopPropagation(); setActiveRotate(false)}}
                                                           className="absolute top-3 z-[2001] py-1 rounded-[4px] bg-red-100 text-gray-700">
                                     {contents.offers[31].text}
-                                    {/*{Collapse map}*/}
                                 </button>}
                                 <div className={`w-full mt-[-18px]`}>
                                     <LeafletMaps listings={listings} formMapFilter={filterMapState} isVisible={activeRotate} />
@@ -544,17 +522,23 @@ const Home = () => {
 
 
                     <div id="rightSideScreen" className="lg:w-1/2 flex justify-center flex-col">
-                        {/*{container}*/}
-                        <div className="container mx-auto text-center py-10">
-                            {(isRegistration && isAuthenticated) ? <h2 className="text-4xl font-bold mb-4 text-yellow-300">{contents.offers[32].text}</h2> :
-                                <h2 className="text-4xl font-bold mb-4">{isRegistration ? contents.offers[33].text : contents.offers[40].text}</h2>}
-                            {/*{To place your Advertisement, : Register to Post an Advertisement}*/}
+                        <div id="content" className="container mx-auto text-center py-10 min-h-[17rem] flex flex-col justify-start">
+                            {(isRegistration && isAuthenticated)
+                                ? <h2 className="text-4xl font-bold mb-4 text-yellow-300">{contents.offers[32].text}</h2>
+                                : <h2 className="text-4xl font-bold mb-4">{isRegistration ? contents.offers[33].text : contents.offers[40].text}</h2>}
                             {(isRegistration && isAuthenticated) ? <p className="text-lg mb-6 text-yellow-300">{contents.offers[34].text}</p> :
                                 <p className="text-lg mb-6">{contents.offers[35].text}</p>}
-                            {/*{fill out the form with your property details. : Your offer will reach the right audience right away.}*/}
-                            {authChecking ? <div className="flex justify-center gap-4 opacity-0 pointer-events-none">
-                                <button className="w-28 min-h-[44px] bg-gray-600 rounded-xl animate-pulse" />
-                                <button className="w-28 min-h-[44px] bg-gray-600 rounded-xl animate-pulse" />
+                            {authChecking ? <div className="flex justify-center flex-wrap gap-4 opacity-0 pointer-events-none" aria-hidden="true">
+                                {!isRegistration && <Link to="registration" tabIndex={-1}>
+                                    <button className="bg-[#2563EB] text-white hover:bg-blue-700 px-6 rounded-xl shadow-md min-h-[44px]">
+                                        {contents.offers[36].text}
+                                    </button>
+                                </Link>}
+                                <Link to="login" tabIndex={-1}>
+                                    <button className="bg-white/15 text-white hover:bg-white/25 border border-white/30 px-6 rounded-xl min-h-[44px]">
+                                        {contents.offers[37].text}
+                                    </button>
+                                </Link>
                             </div> : (isRegistration && isAuthenticated) ? <div className="flex justify-center flex-wrap gap-4">
                                 <Link to="listings/new/rent">
                                     <button className="bg-[#2563EB] text-white hover:bg-blue-700 px-6 rounded-xl shadow-md min-h-[44px]">
@@ -580,8 +564,7 @@ const Home = () => {
                             </div>}
                         </div>
 
-                        <section id={`advertisement`} className="mx-auto mt-12 mb-4 w-[78%]">
-                            {/*<h2>{contents.offers[39].text}</h2>*/}
+                        <section id={`advertisement`} className="mx-auto mt-2 mb-4 w-[78%]">
                             <div className="overflow-hidden py-2">
                                 <div className="flex whitespace-nowrap animate-marquee">
                                     {[...Array(repeatCount)].map((_, i) => (
@@ -671,26 +654,41 @@ const Home = () => {
                     <img src={houseImage} alt="Modern Housing" className="absolute inset-0 w-full h-full object-cover opacity-100 z-[-1]" />
                 </div>
 
+                {/* Scroll hint */}
+                <motion.div
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 z-10 cursor-pointer"
+                    onClick={scrollToListings}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px" fill="currentColor">
+                        <path d="M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z"/>
+                    </svg>
+                </motion.div>
+
             </section>
 
-            {/*<b>{formMapFilter.destination}{formMapFilter.propertyType}{formMapFilter.rangeValue}{formMapFilter.listingType}</b><br/>*/}
-            {/*<b>{filterMapState.destination}{filterMapState.propertyType}{filterMapState.rangeValue}{filterMapState.listingType}</b>*/}
 
-            {/*{DELETE before deploy !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
+            {/* TODO: remove before deploy */}
             <div className="container mx-auto text-center py-10">
                 <button onClick={() => handleResetUserData((data) => setListings(data as unknown as HomeListing[]))}>
                     **** 🔄 Reset auth ****
                 </button>
             </div>
-            {/*{DELETE before deploy !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!}*/}
 
 
             {/* Popular Listings Section */}
             <section id="listings" className="py-10 px-4 xl:px-8" >
                 <div className="mx-auto">
-                    <h3 className="text-4xl font-bold mb-6" style={{textShadow:"2px 1px 2px rgba(0,0,0,0.6)"}}>{contents.offers[38].text}</h3>
-                    {/*{Popular Listings}*/}
-
+                    <div className="mb-10 text-center">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+                        {contents.offers[38].text}
+                    </h1>
+                    <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto">
+                        {contents.offers[43].text}
+                    </p>
+                </div>
+                    
                     {loading ? <LoadingSkeleton /> : <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
                         {((filterState.novelty === "newToOld") ? [...filteredListings].reverse() : filteredListings).map((listing) => (
@@ -709,5 +707,4 @@ const Home = () => {
         </div>
     );
 };
-//export default Home;
-export {Home};
+export { Home };
