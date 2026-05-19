@@ -33,19 +33,28 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 
 const sleep = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
 
+function formatPrice(price: number | string, isSale: boolean): string {
+    if (!isSale) return String(price);
+    const n = Number(price);
+    if (!isNaN(n) && n >= 1000) return `${+(n / 1000).toFixed(1)}k`;
+    return String(price);
+}
+
 function buildMarker(listing: ListingMarker, lat: number, lon: number): L.Marker {
-    const bgColor = listing.listingType === "rent" ? "#2563EB" : "#F59E0B";
+    const isSale = listing.listingType !== "rent";
+    const bgColor = isSale ? "#F59E0B" : "#2563EB";
+    const displayPrice = formatPrice(listing.price, isSale);
     return L.marker([lat, lon], {
         icon: L.divIcon({
             className: "relative",
-            html: `<div style="color:white;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:12px;white-space:nowrap;position:absolute;z-index:1000;background:${bgColor}">$${listing.price}</div>`,
+            html: `<div style="color:white;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:12px;white-space:nowrap;position:absolute;z-index:1000;background:${bgColor}">₴${displayPrice}</div>`,
             iconSize: [40, 40],
             iconAnchor: [20, 40],
         }),
     }).bindPopup(`
         <div>
             <strong>${listing.propertyType}</strong><br/>
-            $${listing.price}<br/>
+            ₴${displayPrice}<br/>
             <a href="/details/${listing._id}" style="font-weight:bold"
                onmouseover="this.style.textDecoration='underline';this.style.color='blue'"
                onmouseout="this.style.textDecoration='none';this.style.color=''">View details</a>
