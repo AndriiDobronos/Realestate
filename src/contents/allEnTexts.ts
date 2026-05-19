@@ -578,4 +578,9 @@
         faq3Q: "Is there a free trial period?",
         faq3A: "First 7 days are free for new platform users.",
     },
+    pagination: {
+        prev: "← Prev",
+        next: "Next →",
+        pageOf: "Page {current} of {total}",
+    },
 }

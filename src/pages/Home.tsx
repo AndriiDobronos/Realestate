@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../services/useAuth';
@@ -14,6 +14,7 @@ import { fetchListings } from '../services/ListingService';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import Pagination from '../components/Pagination';
 import Footer from '../components/Footer';
 import LeafletMaps from '../components/LeafletMaps';
 import ListingCard from '../components/ListingCard';
@@ -75,6 +76,18 @@ const Home = () => {
             return false;
         }
     });
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const PAGE_SIZE = 18;
+    const currentPage = Math.max(1, Number(searchParams.get('page') ?? '1'));
+    const finalListings = filterState.novelty === "newToOld"
+        ? [...filteredListings].reverse()
+        : filteredListings;
+    const totalPages = Math.ceil(finalListings.length / PAGE_SIZE);
+    const displayedListings = finalListings.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    );
 
     const [errorNotification, setErrorNotification] = useState<string>('');
     const [activeRotate, setActiveRotate] = useState(false);
@@ -216,6 +229,7 @@ const Home = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         dispatch(setFilterCriteria(formData));
+        setSearchParams(prev => { prev.delete('page'); return prev; });
     };
 
     const handleSubmitMapFilter = async (e: React.FormEvent) => {
@@ -283,6 +297,12 @@ const Home = () => {
             novelty: "newToOld",
             propertyType: "",
         });
+        setSearchParams(prev => { prev.delete('page'); return prev; });
+    };
+
+    const handlePageChange = (page: number) => {
+        setSearchParams({ page: String(page) });
+        document.getElementById('listings')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     const handleResetMapFilter = () => {
@@ -308,7 +328,7 @@ const Home = () => {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => {setOpenFilter((prev) => !prev); setShowFilter(false);}}
+                                onClick={() => { setOpenFilter((prev) => !prev); setShowFilter(false); setSearchParams(prev => { prev.delete('page'); return prev; }); }}
                                 className="inline-flex items-center gap-2 z-10 bg-white/10 text-white hover:bg-white/20 px-4 rounded-xl min-h-[44px]"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
@@ -689,18 +709,25 @@ const Home = () => {
                     </p>
                 </div>
                     
-                    {loading ? <LoadingSkeleton /> : <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-                        {((filterState.novelty === "newToOld") ? [...filteredListings].reverse() : filteredListings).map((listing) => (
-                            <ListingCard
-                                key={listing._id}
-                                listing={listing}
-                                scrollY={scrollY}
-                                onSaveScroll={handleSaveScrollPosition}
+                    {loading ? <LoadingSkeleton /> : (
+                        <>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                {displayedListings.map((listing) => (
+                                    <ListingCard
+                                        key={listing._id}
+                                        listing={listing}
+                                        scrollY={scrollY}
+                                        onSaveScroll={handleSaveScrollPosition}
+                                    />
+                                ))}
+                            </ul>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
                             />
-                        ))}
-
-                    </ul>}
+                        </>
+                    )}
                 </div>
             </section>
             <Footer color={'#205e7e'}/>
