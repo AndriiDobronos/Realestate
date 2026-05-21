@@ -23,6 +23,7 @@ import houseImage from '../assets/house_img.webp';
 interface HomeListing {
     _id: string;
     date: number | string;
+    listingNumber: number;
     listingType: string;
     propertyType: string;
     apartmentDetails: string;

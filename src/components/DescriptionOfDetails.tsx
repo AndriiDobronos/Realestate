@@ -31,11 +31,13 @@ interface Props {
     isAdmin: boolean;
     show: boolean;
     savedScroll: number;
+    authPrompt: boolean;
     handleLeaveFeedback: () => void;
     handleDeleteUserDataByUserId: () => void;
 }
 
 const DescriptionOfDetails = ({
+    authPrompt,
     listing,
     filterNullListings,
     isAdmin,
@@ -223,7 +225,18 @@ const DescriptionOfDetails = ({
                         33-23.5 56.5T800-160H160Zm70-80q45-56 109-88t141-32q77 0 141 32t109 88h70v-480H160v480h70Zm118 0h264q-29-20-62.5-30T480-280q-36 0-69.5
                         10T348-240Zm132-280q-17 0-28.5-11.5T440-560q0-17 11.5-28.5T480-600q17 0 28.5 11.5T520-560q0 17-11.5 28.5T480-520Zm0 40Z"/>
                     </svg>
-                    <span><span className="font-medium text-gray-500">{d[23].text}</span>{listing.contact}</span>
+                    <div className="flex-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <span><span className="font-medium text-gray-500">{d[23].text}</span>{listing.contact}</span>
+                        <Link
+                            to={`/chat/${listing._id}`}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 !text-white text-xs font-semibold transition-colors whitespace-nowrap min-h-[44px] !shadow-none !border-0"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px" fill="currentColor">
+                                <path d="M240-400h320v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v480q0 33-23.5 56.5T800-240H240L80-80Z"/>
+                            </svg>
+                            {d[28].text}
+                        </Link>
+                    </div>
                 </div>
                 <div className="flex items-start gap-2 text-sm text-gray-600">
                     <svg className="flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#FC931D">
@@ -274,6 +287,25 @@ const DescriptionOfDetails = ({
                     </button>
                 )}
             </div>
+
+            {authPrompt && (
+                <div className="mt-3 flex items-start gap-2.5 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#2563EB" className="shrink-0 mt-0.5">
+                        <path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Z"/>
+                    </svg>
+                    <div className="flex flex-col gap-2">
+                        <p className="text-sm text-blue-700 leading-snug">{d[29].text}</p>
+                        <div className="flex gap-4">
+                            <Link to="/login" className="text-sm font-semibold text-blue-700 hover:text-blue-900 underline transition-colors">
+                                {c.login[0].text}
+                            </Link>
+                            <Link to="/registration" className="text-sm font-semibold text-blue-700 hover:text-blue-900 underline transition-colors">
+                                {c.login[14].text}
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
