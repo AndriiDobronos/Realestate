@@ -6,6 +6,7 @@ import allUaTexts from '../contents/allUaTexts';
 interface Listing {
     _id: string;
     date: number | string;
+    listingNumber: number;
     listingType: string;
     propertyType: string;
     apartmentDetails: string;
@@ -86,13 +87,18 @@ const ListingCard = ({ listing, scrollY, onSaveScroll }: ListingCardProps) => {
             {/* ── Content ───────────────────────────────────────── */}
             <div className="flex flex-col flex-1 p-4 gap-3">
 
-                {/* Property type */}
-                <div className="flex items-center gap-1.5 text-gray-500 text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#6b7280">
-                        <path d="M680-600h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160v-80h160v-560H480v56l-80-58v-78h520v720H680Zm-640
-                            0v-400l280-200 280 200v400H360v-200h-80v200H40Zm80-80h80v-200h240v200h80v-280L320-622 120-480v280Zm560-360ZM440-200v-200H200v200-200h240v200Z"/>
-                    </svg>
-                    <span className="font-medium">{propertyLabel}</span>
+                {/* Property type + listing ID */}
+                <div className="flex items-center justify-between gap-2 text-gray-500 text-sm">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#6b7280" className="flex-shrink-0">
+                            <path d="M680-600h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160h80v-80h-80v80Zm0 160v-80h160v-560H480v56l-80-58v-78h520v720H680Zm-640
+                                0v-400l280-200 280 200v400H360v-200h-80v200H40Zm80-80h80v-200h240v200h80v-280L320-622 120-480v280Zm560-360ZM440-200v-200H200v200-200h240v200Z"/>
+                        </svg>
+                        <span className="font-medium truncate">{propertyLabel}</span>
+                    </div>
+                    <span className="flex-shrink-0 text-xs font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md tracking-wide">
+                        #{listing.listingNumber}
+                    </span>
                 </div>
 
                 {/* Price */}

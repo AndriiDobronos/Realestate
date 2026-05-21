@@ -106,10 +106,10 @@ const MyListings = () => {
     return (
         <div>
             <div className="h-[64px]" />
-            <section className="py-10 px-8">
+            <section className="pb-8 pt-2 px-8">
                 <div className="mx-auto">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
-                        {m[0].text}{userName}
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+                        {m[0].text}
                     </h1>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {listings.map((listing, index) => {

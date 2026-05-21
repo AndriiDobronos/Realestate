@@ -27,6 +27,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword';
 import PromotionYourListing from './pages/PromotionYourListing';
 import SubscriptionToServices from './pages/SubscriptionToServices';
+import ChatPage from './pages/ChatPage';
 
 const ScrollToTop = () => {
     const { pathname } = useLocation();
@@ -72,6 +73,7 @@ function App() {
                         <Route path="/reset-password"  element={<ResetPassword />} />
                         <Route path="promotionYourListing" element={<PromotionYourListing />} />
                         <Route path="subscribeToPremiumServices" element={<SubscriptionToServices />} />
+                        <Route path="chat/:listingId" element={<ChatPage />} />
                     </Routes>
                 </BrowserRouter>
             </LanguageProvider>

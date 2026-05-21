@@ -42,6 +42,7 @@ interface Listing {
 const Details = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts
+    const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
     const userName = useSelector((state: RootState) => state.registration.userName);
     const userId = useSelector((state: RootState) => state.registration.userId);
     const location = useLocation();
@@ -52,6 +53,7 @@ const Details = () => {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [show, setShow] = useState(false);
+    const [authPrompt, setAuthPrompt] = useState(false);
     const [comments, setComments] = useState<Comment[]>([{comment:"loading!!!", commentsAuthor:"", rating:"", timePublication:""}]);
     const [error, setError] = useState('');
     const [saveMessage, setSaveMessage] = useState('');
@@ -173,10 +175,14 @@ const Details = () => {
     };
 
     const handleLeaveFeedback = () => {
+        if (!isRegistration) {
+            setAuthPrompt(true);
+            setTimeout(() => setAuthPrompt(false), 5000);
+            return;
+        }
         scrollToReview();
         setShow(!show);
         if(show) {
-            //document.getElementById("review")?.scrollIntoView({ behavior: "smooth", block: "review" });
             window.scrollTo({top: document.body.scrollHeight, behavior: "smooth"});
         } else {
             document.getElementById("details")?.scrollIntoView({ behavior: "smooth" });
@@ -224,6 +230,7 @@ const Details = () => {
                         isAdmin={isAdmin}
                         show={show}
                         savedScroll={savedScroll}
+                        authPrompt={authPrompt}
                         handleLeaveFeedback={handleLeaveFeedback}
                         handleDeleteUserDataByUserId={handleDeleteUserDataByUserId}
                     />
