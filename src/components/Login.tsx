@@ -287,6 +287,7 @@ const Login: React.FC = () => {
     const { language } = useLanguage();
     const contents = language === 'en' ? allEnTexts : allUaTexts;
     const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
+    const isAuthenticated = useSelector((state: RootState) => state.auth.isLogin);
     const navigate = useNavigate();
     const location = useLocation();
     const { handleAuthSuccess, API_URL } = useAuth();
@@ -310,13 +311,12 @@ const Login: React.FC = () => {
     // ─── Проверяем активную сессию при открытии страницы.
     // Если сессия активна — не показываем форму, показываем кнопку "На головну".
     useEffect(() => {
-        if (isRegistration) {
-            // Пользователь уже в системе — редиректим туда откуда пришёл
+        if (isRegistration && isAuthenticated) {
             const from = location.state?.from || '/';
             navigate(from, { replace: true });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isRegistration]);
+    }, [isRegistration, isAuthenticated]);
 
     // ─── Стандартный вход по email + password ─────────────────────────────────
 

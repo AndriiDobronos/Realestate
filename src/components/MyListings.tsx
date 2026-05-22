@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { RootState } from "../app/store";
 import { useSelector } from 'react-redux';
+import { useIsAdmin } from '../app/hooks';
 import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
@@ -34,12 +35,11 @@ const MyListings = () => {
     const c = contents.cards;
     const m = contents.myListings;
 
-    const userName = useSelector((state: RootState) => state.registration.userName);
     const userId = useSelector((state: RootState) => state.registration.userId);
     const [listings, setListings] = useState<MyListing[]>([]);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
-    const isAdmin = userName === 'admin';
+    const isAdmin = useIsAdmin();
 
     const deleteImagesFromCloudinary = async (images: string[]) => {
         await Promise.all(
@@ -189,9 +189,9 @@ const MyListings = () => {
                                         {/* Price */}
                                         <div className="flex items-baseline gap-1.5">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="#1C935D" className="flex-shrink-0 mb-[-2px]">
-                                                <path d="M444-200h70v-50q50-9 86-39t36-89q0-42-24-77t-96-61q-60-20-83-35t-23-41q0-26 18.5-41t53.5-15q32 0 50 15.5t26 38.5l64-26q-11-35-40.5-61T516-710v-50h-70v50q-50 11-78 44t-28 74q0 47 27.5 76t86.5 50q63 23 87.5 41t24.5 47q0 33-23.5 48.5T486-314q-33 0-58.5-20.5T390-396l-66 26q14 48 43.5 77.5T444-252v52Zm36 120q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                                                <path d="M856-390 570-104q-12 12-27 18t-30 6q-15 0-30-6t-27-18L103-457q-11-11-17-25.5T80-513v-287q0-33 23.5-56.5T160-880h287q16 0 31 6.5t26 17.5l352 353q12 12 17.5 27t5.5 30q0 15-5.5 29.5T856-390ZM513-160l286-286-353-354H160v286l353 354ZM260-640q25 0 42.5-17.5T320-700q0-25-17.5-42.5T260-760q-25 0-42.5 17.5T200-700q0 25 17.5 42.5T260-640Zm220 160Z"/>
                                             </svg>
-                                            <span className="text-2xl font-bold text-gray-800">${listing.price}</span>
+                                            <span className="text-2xl font-bold text-gray-800">{listing.price} &#8372;</span>
                                             {isRent && <span className="text-sm text-gray-400 font-normal">{c[17].text}</span>}
                                         </div>
 

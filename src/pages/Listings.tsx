@@ -115,6 +115,7 @@ const Listings = () => {
     const [showReminder, setShowReminder] = useState<boolean>(false);
     const [currentNumberPage, setCurrentNumberPage] = useState<number>(1);
     const [activeHint, setActiveHint] = useState<string | null>(null);
+    const [activeHintMobile, setActiveHintMobile] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<L.Map | null>(null);
     const markerRef = useRef<L.Marker | null>(null);
@@ -571,56 +572,93 @@ const Listings = () => {
                                 className="flex flex-col gap-2.5">
 
                                 {Object.entries(contents.hints).map(([key, hint]) => (
-                                    <div key={key} className="relative flex flex-col gap-0.5"
-                                        onMouseEnter={() => setActiveHint(key)}
-                                        onMouseLeave={() => setActiveHint(null)}
-                                        onFocus={() => setActiveHint(key)}
-                                        onBlur={() => setActiveHint(null)}>
+                                    <div key={key} className="flex flex-col gap-0.5">
 
-                                        <label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                                            {key === 'apartmentDetails' ? contents.listings.fieldApartmentDetails
-                                                : key === 'description'     ? contents.listings.fieldDescription
-                                                : key === 'contact'         ? contents.listings.fieldContact
-                                                : key === 'price'           ? contents.listings.fieldPrice
-                                                :                             contents.listings.fieldLocation}
-                                        </label>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                                                {key === 'apartmentDetails' ? contents.listings.fieldApartmentDetails
+                                                    : key === 'description'     ? contents.listings.fieldDescription
+                                                    : key === 'contact'         ? contents.listings.fieldContact
+                                                    : key === 'price'           ? contents.listings.fieldPrice
+                                                    :                             contents.listings.fieldLocation}
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] -mr-2 text-[#94A3B8] transition-colors"
+                                                style={{ color: activeHintMobile === key ? '#2563EB' : undefined }}
+                                                onClick={() => setActiveHintMobile(activeHintMobile === key ? null : key)}
+                                                aria-label={contents.listings.hintToggle}
+                                            >
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <circle cx="12" cy="12" r="10"/>
+                                                    <path d="M12 16v-4M12 8h.01"/>
+                                                </svg>
+                                            </button>
+                                        </div>
 
-                                        {key === 'price' || key === 'contact' ? (
-                                            <input
-                                                type={key === 'price' ? 'number' : 'text'}
-                                                placeholder={key === 'contact' ? contents.listings.fieldContact
-                                                    : key === 'price' ? contents.listings.fieldPrice
-                                                    : contents.listings.fieldLocation}
-                                                value={fieldMap[key].value}
-                                                onChange={fieldMap[key].onChange}
-                                                className={inputCls}
-                                            />
-                                        ) : (
-                                            <textarea
-                                                rows={key === 'location' ? 1 : 2}
-                                                placeholder={key === 'apartmentDetails' ? contents.listings.fieldApartmentDetails
-                                                    : key === 'description' ? contents.listings.fieldDescription
-                                                    : contents.listings.fieldLocation}
-                                                value={fieldMap[key].value}
-                                                onChange={fieldMap[key].onChange}
-                                                className={`${inputCls} resize-none`}
-                                            />
-                                        )}
+                                        <div
+                                            className="relative"
+                                            onMouseEnter={() => setActiveHint(key)}
+                                            onMouseLeave={() => setActiveHint(null)}
+                                            onFocus={(e) => {
+                                                setActiveHint(key);
+                                                const el = e.target as HTMLElement;
+                                                setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+                                            }}
+                                            onBlur={() => setActiveHint(null)}
+                                        >
+                                            {key === 'price' || key === 'contact' ? (
+                                                <input
+                                                    type={key === 'price' ? 'number' : 'text'}
+                                                    placeholder={key === 'contact' ? contents.listings.fieldContact
+                                                        : key === 'price' ? contents.listings.fieldPrice
+                                                        : contents.listings.fieldLocation}
+                                                    value={fieldMap[key].value}
+                                                    onChange={fieldMap[key].onChange}
+                                                    className={inputCls}
+                                                />
+                                            ) : (
+                                                <textarea
+                                                    rows={key === 'location' ? 1 : 2}
+                                                    placeholder={key === 'apartmentDetails' ? contents.listings.fieldApartmentDetails
+                                                        : key === 'description' ? contents.listings.fieldDescription
+                                                        : contents.listings.fieldLocation}
+                                                    value={fieldMap[key].value}
+                                                    onChange={fieldMap[key].onChange}
+                                                    className={`${inputCls} resize-none`}
+                                                />
+                                            )}
+
+                                            <AnimatePresence>
+                                                {activeHint === key && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, y: 4 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: 4 }}
+                                                        transition={{ duration: 0.15 }}
+                                                        className="hidden md:block absolute z-10 top-full left-0 mt-2 w-full bg-[#0F172A] text-white py-1.5 px-2.5 text-xs rounded-xl shadow-xl leading-relaxed
+                                                            before:absolute before:top-0 before:left-4 before:-translate-y-full before:border-8 before:border-transparent before:border-b-[#0F172A]"
+                                                    >
+                                                        {hint}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
 
                                         <AnimatePresence>
-                                            {activeHint === key && (
+                                            {activeHintMobile === key && (
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: 4 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: 4 }}
-                                                    transition={{ duration: 0.15 }}
-                                                    className="absolute z-10 top-full left-0 mt-1 w-full bg-[#0F172A] text-white p-2.5 text-xs rounded-xl shadow-xl leading-relaxed
-                                                        before:absolute before:top-0 before:left-4 before:-translate-y-full before:border-8 before:border-transparent before:border-b-[#0F172A]"
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    className="md:hidden overflow-hidden bg-[#EFF6FF] text-[#3B82F6] py-2 px-3 text-xs rounded-lg leading-relaxed border border-[#BFDBFE]"
                                                 >
                                                     {hint}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
+
                                     </div>
                                 ))}
 

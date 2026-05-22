@@ -287,6 +287,8 @@
         {id:"4",text:"Avg rating"},
         {id:"5",text:"Contact"},
         {id:"6",text:"License plate: # "},
+        {id:"7",text:"Hello"},
+        {id:"8",text:"I would like to discuss a property with you."},
     ],
     listings:{
         editModeTitle:          "Listing editing mode:",
@@ -327,6 +329,7 @@
         addressNotFound:        "This address does not exist or was entered incorrectly",
         collapseMap:            "collapse map",
         formTitleFor:           "Form for listing about",
+        hintToggle:             "Show hint",
     },
     registration:[
         {id:"0",text:"Registration form"},

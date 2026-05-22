@@ -11,7 +11,7 @@ import allUaTexts from '../contents/allUaTexts';
 import Burger from './Burger';
 import { resetAuthProperty, setAuthProperty, setAuthChecking } from '../features/auth/authSlice';
 import { useAuth } from '../services/useAuth';
-import { setIsRegistration, setUserName, setUserId } from '../features/registration/registrationSlice';
+import { setIsRegistration, setUserName, setUserId, setRole } from '../features/registration/registrationSlice';
 
 const Header = () => {
     const { language } = useLanguage();
@@ -44,6 +44,7 @@ const Header = () => {
                 dispatch(setIsRegistration(true));
                 dispatch(setUserName(user.name));
                 dispatch(setUserId(user.id));
+                dispatch(setRole(user.role === 'admin' ? 'admin' : 'user'));
             } else {
                 dispatch(resetAuthProperty());
             }

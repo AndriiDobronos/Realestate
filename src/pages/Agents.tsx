@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RootState } from "../app/store";
-import { useSelector } from 'react-redux';
+import { useIsAdmin } from '../app/hooks';
 import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
@@ -23,8 +22,7 @@ interface AgentData {
 const Agents = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts;
-    const userName = useSelector((state: RootState) => state.registration.userName);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const isAdmin = useIsAdmin();
     const [agentsData, setAgentsData] = useState<AgentData[]>([]);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -35,9 +33,14 @@ const Agents = () => {
             setAgentsData(data);
         };
         fetchAgents();
-        if (userName === "admin") setIsAdmin(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleEmailAgent = (email: string) => {
+        const subject = encodeURIComponent(contents.agents[7].text);
+        const body = encodeURIComponent(contents.agents[8].text);
+        window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+    };
 
     return (
         <div>
@@ -117,12 +120,12 @@ const Agents = () => {
                                 <p className="text-xs text-gray-400 mt-auto">{contents.agents[6].text}{agent.license}</p>
 
                                 {/* contact button */}
-                                <a
-                                    href={`mailto:${agent.email}?subject=Доброго_дня&body=Я%20хотів%20би%20поспілкуватись%20з%20вами%20з%20приводу`}
-                                    className="block w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold text-center transition-colors duration-200"
+                                <button
+                                    onClick={() => handleEmailAgent(agent.email)}
+                                    className="w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold text-center transition-colors duration-200"
                                 >
                                     {contents.agents[5].text}
-                                </a>
+                                </button>
                             </div>
                         </li>
                     ))}

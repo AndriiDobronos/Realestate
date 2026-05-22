@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RootState } from "../app/store";
 import { useSelector } from 'react-redux';
+import { useIsAdmin } from '../app/hooks';
 import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
@@ -49,7 +50,7 @@ const MyNotification = () => {
 
     const userName = useSelector((state: RootState) => state.registration.userName);
     const userId = useSelector((state: RootState) => state.registration.userId);
-    const isAdmin = userName === 'admin';
+    const isAdmin = useIsAdmin();
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [error, setError] = useState('');

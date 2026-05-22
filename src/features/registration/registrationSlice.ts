@@ -2,16 +2,19 @@ import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction, Middleware } from '@reduxjs/toolkit'
 import type { RootState } from '../../app/store'
 
+export type UserRole = 'admin' | 'user' | null;
+
 export interface IRegistrationState {
     isRegistered: boolean;
     userName: string;
     userId: string;
+    role: UserRole;
 }
 
 const loadState = (): IRegistrationState => {
     try {
         const serializedState = localStorage.getItem('registrationState');
-        if (!serializedState) return { isRegistered: false, userName: '',userId: ''};
+        if (!serializedState) return { isRegistered: false, userName: '', userId: '', role: null };
 
         const parsed = JSON.parse(serializedState);
 
@@ -24,13 +27,16 @@ const loadState = (): IRegistrationState => {
             typeof parsed.userName === 'string' &&
             typeof parsed.userId === 'string'
         ) {
-            return parsed;
+            return {
+                ...parsed,
+                role: parsed.role === 'admin' || parsed.role === 'user' ? parsed.role : null,
+            };
         }
 
-        return { isRegistered: false, userName: '', userId: '' };
+        return { isRegistered: false, userName: '', userId: '', role: null };
     } catch (e) {
         console.warn('Failed to load registration state:', e);
-        return { isRegistered: false, userName: '', userId: '' };
+        return { isRegistered: false, userName: '', userId: '', role: null };
     }
 };
 
@@ -49,10 +55,14 @@ export const registrationSlice = createSlice({
         setUserId: (state: IRegistrationState, action: PayloadAction<string>) => {
             state.userId = action.payload;
         },
+        setRole: (state: IRegistrationState, action: PayloadAction<UserRole>) => {
+            state.role = action.payload;
+        },
         resetRegistration: (state: IRegistrationState) => {
             state.isRegistered = false;
             state.userName = '';
             state.userId = '';
+            state.role = null;
         },
     },
 });
@@ -68,6 +78,6 @@ export const registrationMiddleware: Middleware = (store) => (next) => (action) 
     return result;
 };
 
-export const { setIsRegistration, setUserName, setUserId, resetRegistration } = registrationSlice.actions;
+export const { setIsRegistration, setUserName, setUserId, setRole, resetRegistration } = registrationSlice.actions;
 export const selectName = (state: RootState) => state.registration.userName;
 export default registrationSlice.reducer;

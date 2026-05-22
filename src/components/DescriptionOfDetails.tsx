@@ -58,6 +58,15 @@ const DescriptionOfDetails = ({
     const goNext = () =>
         setImgIndex(i => (i === filterNullListings.length - 1 ? 0 : i + 1));
 
+    const handleFeedbackClick = () => {
+        handleLeaveFeedback();
+        if (!show) {
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 80);
+        }
+    };
+
     const isRent = listing.listingType === 'rent';
     const isFlat = listing.propertyType === 'flat';
     const isPrivateHouse = listing.propertyType === 'private house';
@@ -280,7 +289,7 @@ const DescriptionOfDetails = ({
                     </button>
                 ) : (
                     <button
-                        onClick={handleLeaveFeedback}
+                        onClick={handleFeedbackClick}
                         className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200"
                     >
                         {show ? d[6].text : d[7].text}
