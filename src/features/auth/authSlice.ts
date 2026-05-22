@@ -2,12 +2,15 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface IAuthState {
     isLogin: boolean;
-    isChecking: boolean; // true пока checkAuth ещё не получил ответ от сервера
+    isChecking: boolean;
 }
 
+const sessionExpiry = Number(localStorage.getItem('sessionExpiry') || 0);
+const isSessionValid = sessionExpiry > Date.now();
+
 const initialState: IAuthState = {
-    isLogin: false,
-    isChecking: true,
+    isLogin: isSessionValid,
+    isChecking: !isSessionValid,
 }
 
 export const authSlice = createSlice({
@@ -20,7 +23,7 @@ export const authSlice = createSlice({
         setAuthChecking: (state, action: PayloadAction<boolean>) => {
             state.isChecking = action.payload;
         },
-        resetAuthProperty: () => initialState,
+        resetAuthProperty: () => ({ isLogin: false, isChecking: false }),
     }
 });
 export const { setAuthProperty, setAuthChecking, resetAuthProperty } = authSlice.actions;

@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setIsRegistration, setUserName, setUserId, resetRegistration } from '../features/registration/registrationSlice';
+import { setIsRegistration, setUserName, setUserId, setRole, resetRegistration } from '../features/registration/registrationSlice';
 import { setAuthProperty, resetAuthProperty, setAuthChecking } from '../features/auth/authSlice';
 import { fetchListings } from './ListingService';
 import { RootState } from '../app/store';
@@ -9,6 +9,7 @@ interface AuthUser {
     id: string;
     name: string;
     email: string;
+    role?: string;
     authMethod?: string;
 }
 
@@ -26,16 +27,21 @@ export const useAuth = () => {
     const handleAuthSuccess = (data: AuthSuccessData, redirectTo: string = '/') => {
         const { user } = data;
 
+        const SESSION_DAYS = 7;
+        localStorage.setItem('sessionExpiry', String(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000));
         localStorage.setItem('user', JSON.stringify(user));
+        const role = user.role === 'admin' ? 'admin' : 'user';
         localStorage.setItem('registrationState', JSON.stringify({
             isRegistered: true,
             userName: user.name,
             userId: user.id,
+            role,
         }));
 
         dispatch(setIsRegistration(true));
         dispatch(setUserName(user.name));
         dispatch(setUserId(user.id));
+        dispatch(setRole(role));
         dispatch(setAuthProperty(true));
 
         setTimeout(() => navigate(redirectTo), 1500);
@@ -104,6 +110,7 @@ export const useAuth = () => {
             localStorage.removeItem('user');
             localStorage.removeItem('registrationState');
             localStorage.removeItem('userImages');
+            localStorage.removeItem('sessionExpiry');
 
             const freshData = await fetchListings();
             setListings(freshData);
@@ -124,6 +131,7 @@ export const useAuth = () => {
         localStorage.removeItem('registrationState');
         localStorage.removeItem('userImages');
         localStorage.removeItem('user');
+        localStorage.removeItem('sessionExpiry');
         dispatch(resetRegistration());
         dispatch(resetAuthProperty());
         dispatch(setAuthChecking(false));
@@ -140,12 +148,16 @@ export const useAuth = () => {
             });
             const data = await response.json();
             if (data.isAuthenticated && data.user) {
+                if (data.expiresAt) {
+                    localStorage.setItem('sessionExpiry', String(new Date(data.expiresAt).getTime()));
+                }
                 return {
                     isAuthenticated: true,
                     user: {
                         id: data.id,
                         name: data.user,
                         email: data.email ?? '',
+                        role: data.role,
                     },
                 };
             }

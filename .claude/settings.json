@@ -19,5 +19,22 @@
       "Bash(npm install:*)",
       "Bash(pnpm add:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{
+        "type": "command",
+        "command": "pnpm run typecheck 2>&1 | tail -10"
+      }]
+    }],
+    "Stop": [{
+  "hooks": [{"type": "command",
+    "command": "terminal-notifier -title 'Claude Code' -message 'Завершив задачу'"}]
+   }],
+   "SessionStart": [{
+  "hooks": [{"type": "command",
+    "command": "echo '=== Git Status ===' && git status -s && echo '=== Recent commits ===' && git log --oneline -5"}]
+  }]
   }
 }

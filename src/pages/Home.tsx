@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../services/useAuth';
 import { RootState } from '../app/store';
-import { setIsRegistration, setUserName, setUserId } from '../features/registration/registrationSlice';
-import { setImages } from '../features/upLoadImages/upLoadImagesSlice';
+import { setIsRegistration, setUserName, setUserId, setRole } from '../features/registration/registrationSlice';
+import { setAuthProperty } from '../features/auth/authSlice';
+import { setImages, clearImages } from '../features/upLoadImages/upLoadImagesSlice';
 import { setFilterCriteria, resetFilter } from '../features/filter/filterSlice';
 import { setFilterFeatures, resetMapFilter } from '../features/filterMap/filterMapSlice';
 import { setScrollY } from '../features/scroll/scrollSlice';
+import { resetNotificationProperty } from '../features/notification/notificationSlice';
 import { fetchListings } from '../services/ListingService';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
@@ -51,9 +53,10 @@ const Home = () => {
     const filterState = useSelector((state: RootState) => state.filter);
     const filterMapState = useSelector((state: RootState) => state.filterMap);
     const dispatch = useDispatch();
-    const { handleResetUserData } = useAuth();
+    const { handleResetUserData, checkAuth } = useAuth();
     const isAuthenticated = useSelector((state: RootState) => state.auth.isLogin);
     const authChecking = useSelector((state: RootState) => state.auth.isChecking);
+    const navigate = useNavigate();
     const [openFilter, setOpenFilter] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [openInfo, setOpenInfo] = useState(false);
@@ -134,16 +137,25 @@ const Home = () => {
 
     useEffect(() => {
         const fetchFeaturedAd = async () => {
-            const response = await fetch(`${API_URL}/api/video`, {
-                method: "GET",
-                credentials: "include",
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                setErrorNotification(errorText);
+            try {
+                const response = await fetch(`${API_URL}/api/video`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    setErrorNotification(errorText);
+                    return;
+                }
+                const data = await response.json();
+                const ad = Array.isArray(data) ? data[0] : data;
+                setFeaturedAd({
+                    adsString: ad?.adsString ?? "",
+                    videoUrl: ad?.videoUrl ?? [""],
+                });
+            } catch (error) {
+                console.error('Failed to fetch featured ad:', error);
             }
-            const data = await response.json();
-            setFeaturedAd(data);
         };
 
         fetchFeaturedAd();
@@ -284,6 +296,40 @@ const Home = () => {
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRegistration, userName]);
+
+    const handleDevReset = async () => {
+        // auth + registration + server logout
+        await handleResetUserData((data) => setListings(data as unknown as HomeListing[]));
+        // all other slices
+        dispatch(resetFilter());
+        dispatch(resetMapFilter());
+        dispatch(resetNotificationProperty());
+        dispatch(setScrollY(0));
+        dispatch(clearImages());
+        // remaining localStorage keys
+        localStorage.removeItem('scrollPosition');
+        localStorage.removeItem('coordsCache');
+        // reset local UI state
+        setOpenFilter(false);
+        setShowFilter(false);
+        setActiveRotate(false);
+        setFormData({ listingType: '', minPrice: '0', maxPrice: '100000000', novelty: 'newToOld', propertyType: '' });
+        setFormMapFilter({ destination: '', rangeValue: 20, listingType: '', propertyType: '' });
+    };
+
+    const handleLoginClick = async () => {
+        if (isRegistration) {
+            const { isAuthenticated: live, user } = await checkAuth();
+            if (live && user) {
+                dispatch(setAuthProperty(true));
+                dispatch(setUserName(user.name));
+                dispatch(setUserId(user.id));
+                dispatch(setRole(user.role === 'admin' ? 'admin' : 'user'));
+                return;
+            }
+        }
+        navigate('/login');
+    };
 
     const scrollToListings = () => {
         document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" });
@@ -549,7 +595,7 @@ const Home = () => {
                                 : <h2 className="text-4xl font-bold mb-4">{isRegistration ? contents.offers[33].text : contents.offers[40].text}</h2>}
                             {(isRegistration && isAuthenticated) ? <p className="text-lg mb-6 text-yellow-300">{contents.offers[34].text}</p> :
                                 <p className="text-lg mb-6">{contents.offers[35].text}</p>}
-                            {authChecking ? <div className="flex justify-center flex-wrap gap-4 opacity-0 pointer-events-none" aria-hidden="true">
+                            {(authChecking && !isAuthenticated) ? <div className="flex justify-center flex-wrap gap-4 opacity-0 pointer-events-none" aria-hidden="true">
                                 {!isRegistration && <Link to="registration" tabIndex={-1}>
                                     <button className="bg-[#2563EB] text-white hover:bg-blue-700 px-6 rounded-xl shadow-md min-h-[44px]">
                                         {contents.offers[36].text}
@@ -577,11 +623,12 @@ const Home = () => {
                                         {contents.offers[36].text}
                                     </button>
                                 </Link>}
-                                <Link to="login">
-                                    <button className="bg-white/15 text-white hover:bg-white/25 border border-white/30 px-6 rounded-xl min-h-[44px]">
-                                        {contents.offers[37].text}
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={handleLoginClick}
+                                    className="bg-white/15 text-white hover:bg-white/25 border border-white/30 px-6 rounded-xl min-h-[44px]"
+                                >
+                                    {contents.offers[37].text}
+                                </button>
                             </div>}
                         </div>
 
@@ -596,7 +643,7 @@ const Home = () => {
                                 </div>
                             </div>
 
-                            {featuredAd.videoUrl[0] ? (
+                            {featuredAd.videoUrl?.[0] ? (
                                 <video controls autoPlay muted loop src={featuredAd.videoUrl[0]} />
                             ) : (
                                 <div className="w-full rounded-lg overflow-hidden relative"
@@ -692,8 +739,8 @@ const Home = () => {
 
             {/* TODO: remove before deploy */}
             <div className="container mx-auto text-center py-10">
-                <button onClick={() => handleResetUserData((data) => setListings(data as unknown as HomeListing[]))}>
-                    **** 🔄 Reset auth ****
+                <button onClick={handleDevReset}>
+                    **** 🔄 DEV: Reset all state ****
                 </button>
             </div>
 

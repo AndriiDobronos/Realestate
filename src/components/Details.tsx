@@ -5,6 +5,7 @@ import DescriptionOfDetails from "./DescriptionOfDetails";
 import Map from "./Map";
 import {RootState} from "../app/store";
 import {useSelector} from "react-redux";
+import { useIsAdmin } from '../app/hooks';
 import { useAuth } from '../services/useAuth';
 import {getRandomHexColor} from"../services/randomColor";
 import {useLanguage} from "../context/LanguageContext";
@@ -51,7 +52,7 @@ const Details = () => {
     const { id } = useParams<{ id: string }>();
     const [listing, setListing] = useState<Listing | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isAdmin, setIsAdmin] = useState(false);
+    const isAdmin = useIsAdmin();
     const [show, setShow] = useState(false);
     const [authPrompt, setAuthPrompt] = useState(false);
     const [comments, setComments] = useState<Comment[]>([{comment:"loading!!!", commentsAuthor:"", rating:"", timePublication:""}]);
@@ -103,12 +104,6 @@ const Details = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
-    useEffect(() => {
-        if(userName === `admin`) {
-            setIsAdmin(true)
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const fetchComments = async () => {
         const response = await fetch(`${API_URL}/api/comments/listingId/${id}`);

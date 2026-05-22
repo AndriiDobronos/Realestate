@@ -3,3 +3,8 @@ import type { RootState, AppDispatch } from './store'
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+export const useIsAdmin = () => {
+    const role = useSelector((state: RootState) => state.registration.role);
+    return role === 'admin';
+};
