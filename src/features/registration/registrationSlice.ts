@@ -3,18 +3,29 @@ import type { PayloadAction, Middleware } from '@reduxjs/toolkit'
 import type { RootState } from '../../app/store'
 
 export type UserRole = 'admin' | 'user' | null;
+export type SubscribeType = 'Free' | 'Standard' | 'Premium';
+
+export const normalizeSubscribeType = (raw?: string): SubscribeType => {
+    if (!raw) return 'Free';
+    const lower = raw.toLowerCase();
+    if (lower === 'standard') return 'Standard';
+    if (lower === 'premium') return 'Premium';
+    return 'Free';
+};
 
 export interface IRegistrationState {
     isRegistered: boolean;
     userName: string;
     userId: string;
     role: UserRole;
+    subscribeType: SubscribeType;
+    subscribeExpired: string | null;
 }
 
 const loadState = (): IRegistrationState => {
     try {
         const serializedState = localStorage.getItem('registrationState');
-        if (!serializedState) return { isRegistered: false, userName: '', userId: '', role: null };
+        if (!serializedState) return { isRegistered: false, userName: '', userId: '', role: null, subscribeType: 'Free', subscribeExpired: null };
 
         const parsed = JSON.parse(serializedState);
 
@@ -30,13 +41,15 @@ const loadState = (): IRegistrationState => {
             return {
                 ...parsed,
                 role: parsed.role === 'admin' || parsed.role === 'user' ? parsed.role : null,
+                subscribeType: normalizeSubscribeType(parsed.subscribeType),
+                subscribeExpired: typeof parsed.subscribeExpired === 'string' ? parsed.subscribeExpired : null,
             };
         }
 
-        return { isRegistered: false, userName: '', userId: '', role: null };
+        return { isRegistered: false, userName: '', userId: '', role: null, subscribeType: 'Free', subscribeExpired: null };
     } catch (e) {
         console.warn('Failed to load registration state:', e);
-        return { isRegistered: false, userName: '', userId: '', role: null };
+        return { isRegistered: false, userName: '', userId: '', role: null, subscribeType: 'Free', subscribeExpired: null };
     }
 };
 
@@ -58,16 +71,24 @@ export const registrationSlice = createSlice({
         setRole: (state: IRegistrationState, action: PayloadAction<UserRole>) => {
             state.role = action.payload;
         },
+        setSubscribeType: (state: IRegistrationState, action: PayloadAction<SubscribeType>) => {
+            state.subscribeType = action.payload;
+        },
+        setSubscribeExpired: (state: IRegistrationState, action: PayloadAction<string | null>) => {
+            state.subscribeExpired = action.payload;
+        },
         resetRegistration: (state: IRegistrationState) => {
             state.isRegistered = false;
             state.userName = '';
             state.userId = '';
             state.role = null;
+            state.subscribeType = 'Free';
+            state.subscribeExpired = null;
         },
     },
 });
 
-// Middleware для автосохранения
+// Middleware for auto-save to localStorage
 export const registrationMiddleware: Middleware = (store) => (next) => (action) => {
     const result = next(action);
     const act = action as { type?: string };
@@ -78,6 +99,14 @@ export const registrationMiddleware: Middleware = (store) => (next) => (action) 
     return result;
 };
 
-export const { setIsRegistration, setUserName, setUserId, setRole, resetRegistration } = registrationSlice.actions;
+export const {
+    setIsRegistration,
+    setUserName,
+    setUserId,
+    setRole,
+    setSubscribeType,
+    setSubscribeExpired,
+    resetRegistration,
+} = registrationSlice.actions;
 export const selectName = (state: RootState) => state.registration.userName;
 export default registrationSlice.reducer;

@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../services/useAuth';
 import { RootState } from '../app/store';
-import { setIsRegistration, setUserName, setUserId, setRole } from '../features/registration/registrationSlice';
+import { setIsRegistration, setUserName, setUserId, setRole, setSubscribeType, setSubscribeExpired, normalizeSubscribeType } from '../features/registration/registrationSlice';
 import { setAuthProperty } from '../features/auth/authSlice';
 import { setImages, clearImages } from '../features/upLoadImages/upLoadImagesSlice';
 import { setFilterCriteria, resetFilter } from '../features/filter/filterSlice';
@@ -325,6 +325,10 @@ const Home = () => {
                 dispatch(setUserName(user.name));
                 dispatch(setUserId(user.id));
                 dispatch(setRole(user.role === 'admin' ? 'admin' : 'user'));
+                if (user.subscribeType !== undefined) {
+                    dispatch(setSubscribeType(normalizeSubscribeType(user.subscribeType)));
+                    dispatch(setSubscribeExpired(user.subscribeExpired ?? null));
+                }
                 return;
             }
         }
