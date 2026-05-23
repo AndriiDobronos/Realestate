@@ -3,6 +3,8 @@ import { motion, useInView, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
+import { useSubscription } from '../hooks/useSubscription';
+import SubscriptionBanner from '../components/SubscriptionBanner';
 
 /* ── Animation variants ─────────────────────────────────────────── */
 
@@ -86,6 +88,7 @@ const IconArrowDown = () => (
 const PromotionYourListing = () => {
     const { language } = useLanguage();
     const t = (language === 'en' ? allEnTexts : allUaTexts).promotionYourListing;
+    const { canUseStandard } = useSubscription();
 
     const [form, setForm] = useState({ name: '', email: '', phone: '' });
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -127,6 +130,12 @@ const PromotionYourListing = () => {
 
     return (
         <div className="min-h-screen bg-[#050810] text-white overflow-x-hidden">
+            {!canUseStandard && (
+                <div className="max-w-5xl mx-auto px-6 pt-24">
+                    <SubscriptionBanner requiredPlan="standard" />
+                </div>
+            )}
+            <div className={!canUseStandard ? 'pointer-events-none opacity-50 select-none' : ''}>
 
             {/* ══════════════════════════════════════════════════════
                 HERO
@@ -481,6 +490,7 @@ const PromotionYourListing = () => {
             <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #14b8a6, #6d28d9, transparent)' }} />
             <div className="h-20" />
 
+        </div>{/* end canUseStandard guard */}
         </div>
     );
 };

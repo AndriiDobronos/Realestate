@@ -191,7 +191,7 @@ const Services = () => {
                 {/* ── CTA ────────────────────────────────────── */}
                 <div className="text-center pt-4 pb-8">
                     <Link
-                        to="/subscribeToPremiumServices"
+                        to="/subscription"
                         className="inline-block px-8 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 shadow-md hover:shadow-lg"
                     >
                         {s[14].text}

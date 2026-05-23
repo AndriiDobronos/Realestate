@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSubscription } from '../hooks/useSubscription';
 import { RootState } from '../app/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,16 +12,19 @@ import allUaTexts from '../contents/allUaTexts';
 import Burger from './Burger';
 import { resetAuthProperty, setAuthProperty, setAuthChecking } from '../features/auth/authSlice';
 import { useAuth } from '../services/useAuth';
-import { setIsRegistration, setUserName, setUserId, setRole } from '../features/registration/registrationSlice';
+import { setIsRegistration, setUserName, setUserId, setRole, setSubscribeType, setSubscribeExpired, normalizeSubscribeType } from '../features/registration/registrationSlice';
 
 const Header = () => {
     const { language } = useLanguage();
     const contents = language === 'en' ? allEnTexts : allUaTexts;
+    const tBanner = contents.subscriptionBanner;
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const isRegistration = useSelector((state: RootState) => state.registration.isRegistered);
     const ownerName = useSelector((state: RootState) => state.registration.userName);
     const isAuth = useSelector((state: RootState) => state.auth.isLogin);
     const { checkAuth, handleFullLogout } = useAuth();
+    const { subscribeType } = useSubscription();
 
     const [mobileMenu, setMobileMenu] = useState(false);
     const [showAdDropdown, setShowAdDropdown] = useState(false);
@@ -45,6 +49,10 @@ const Header = () => {
                 dispatch(setUserName(user.name));
                 dispatch(setUserId(user.id));
                 dispatch(setRole(user.role === 'admin' ? 'admin' : 'user'));
+                if (user.subscribeType !== undefined) {
+                    dispatch(setSubscribeType(normalizeSubscribeType(user.subscribeType)));
+                    dispatch(setSubscribeExpired(user.subscribeExpired ?? null));
+                }
             } else {
                 dispatch(resetAuthProperty());
             }
@@ -170,7 +178,21 @@ const Header = () => {
                             {showProfileDropdown && (
                                 <div className={dropdownPanelClass}>
                                     <p className="text-base font-semibold text-gray-800">{contents.header[6].text}</p>
-                                    <p className="text-sm text-[#2563EB] mb-3 font-medium truncate">{ownerName}</p>
+                                    <p className="text-sm text-[#2563EB] font-medium truncate">{ownerName}</p>
+                                    <div className="flex items-center justify-between mt-1 mb-1">
+                                        <span className="text-xs text-gray-500">
+                                            {contents.header[15].text}{' '}
+                                            <span className={`font-semibold ${subscribeType === 'Premium' ? 'text-amber-500' : subscribeType === 'Standard' ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                {subscribeType === 'Premium' ? tBanner.planPremium : subscribeType === 'Standard' ? tBanner.planStandard : tBanner.planFree}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => { setShowProfileDropdown(false); navigate('/subscription'); }}
+                                        className="w-full mb-3 py-1.5 rounded-xl !bg-amber-500 hover:!bg-amber-600 text-white text-xs font-semibold transition-colors !shadow-none !border-0 min-h-[36px]"
+                                    >
+                                        {contents.header[16].text}
+                                    </button>
                                     <Link to="myListings" onClick={() => setShowProfileDropdown(false)}>
                                         <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 mb-2 rounded-xl text-left px-3">
                                             {contents.header[7].text}
@@ -299,7 +321,21 @@ const Header = () => {
                     {showMobileProfileDropdown && (
                         <div className="mt-1 bg-white rounded-xl shadow-lg p-3">
                             <p className="text-base font-semibold text-gray-800">{contents.header[6].text}</p>
-                            <p className="text-sm text-[#2563EB] mb-3 font-medium truncate">{ownerName}</p>
+                            <p className="text-sm text-[#2563EB] font-medium truncate">{ownerName}</p>
+                            <div className="flex items-center justify-between mt-1 mb-1">
+                                <span className="text-xs text-gray-500">
+                                    {contents.header[15].text}{' '}
+                                    <span className={`font-semibold ${subscribeType === 'Premium' ? 'text-amber-500' : subscribeType === 'Standard' ? 'text-blue-600' : 'text-gray-400'}`}>
+                                        {subscribeType === 'Premium' ? tBanner.planPremium : subscribeType === 'Standard' ? tBanner.planStandard : tBanner.planFree}
+                                    </span>
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => { closeMobileMenu(); navigate('/subscription'); }}
+                                className="w-full mb-3 py-1.5 rounded-xl !bg-amber-500 hover:!bg-amber-600 text-white text-xs font-semibold transition-colors !shadow-none !border-0 min-h-[44px]"
+                            >
+                                {contents.header[16].text}
+                            </button>
                             <Link to="myListings" onClick={closeMobileMenu}>
                                 <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 mb-2 rounded-xl text-left px-3">
                                     {contents.header[7].text}

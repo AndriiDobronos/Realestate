@@ -72,7 +72,7 @@ function App() {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password"  element={<ResetPassword />} />
                         <Route path="promotionYourListing" element={<PromotionYourListing />} />
-                        <Route path="subscribeToPremiumServices" element={<SubscriptionToServices />} />
+                        <Route path="subscription" element={<SubscriptionToServices />} />
                         <Route path="chat/:listingId" element={<ChatPage />} />
                     </Routes>
                 </BrowserRouter>

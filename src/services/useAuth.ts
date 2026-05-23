@@ -1,16 +1,28 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { setIsRegistration, setUserName, setUserId, setRole, resetRegistration } from '../features/registration/registrationSlice';
+import {
+    setIsRegistration,
+    setUserName,
+    setUserId,
+    setRole,
+    setSubscribeType,
+    setSubscribeExpired,
+    resetRegistration,
+    normalizeSubscribeType,
+} from '../features/registration/registrationSlice';
+import type { SubscribeType } from '../features/registration/registrationSlice';
 import { setAuthProperty, resetAuthProperty, setAuthChecking } from '../features/auth/authSlice';
 import { fetchListings } from './ListingService';
 import { RootState } from '../app/store';
 
-interface AuthUser {
+export interface AuthUser {
     id: string;
     name: string;
     email: string;
     role?: string;
     authMethod?: string;
+    subscribeType?: string;      // undefined якщо бекенд не повернув поле
+    subscribeExpired?: string | null;
 }
 
 interface AuthSuccessData {
@@ -30,18 +42,26 @@ export const useAuth = () => {
         const SESSION_DAYS = 7;
         localStorage.setItem('sessionExpiry', String(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000));
         localStorage.setItem('user', JSON.stringify(user));
+
         const role = user.role === 'admin' ? 'admin' : 'user';
+        const subscribeType: SubscribeType = normalizeSubscribeType(user.subscribeType);
+        const subscribeExpired = user.subscribeExpired ?? null;
+
         localStorage.setItem('registrationState', JSON.stringify({
             isRegistered: true,
             userName: user.name,
             userId: user.id,
             role,
+            subscribeType,
+            subscribeExpired,
         }));
 
         dispatch(setIsRegistration(true));
         dispatch(setUserName(user.name));
         dispatch(setUserId(user.id));
         dispatch(setRole(role));
+        dispatch(setSubscribeType(subscribeType));
+        dispatch(setSubscribeExpired(subscribeExpired));
         dispatch(setAuthProperty(true));
 
         setTimeout(() => navigate(redirectTo), 1500);
@@ -158,6 +178,8 @@ export const useAuth = () => {
                         name: data.user,
                         email: data.email ?? '',
                         role: data.role,
+                        subscribeType: normalizeSubscribeType(data.subscribeType),
+                        subscribeExpired: data.subscribeExpired ?? null,
                     },
                 };
             }

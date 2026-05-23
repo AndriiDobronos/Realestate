@@ -7,10 +7,13 @@ import { useDispatch } from 'react-redux';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
+import { useSubscription } from '../hooks/useSubscription';
+import SubscriptionBanner from '../components/SubscriptionBanner';
 
 const AddAgent = () => {
     const { language } = useLanguage();
     const c = language === "en" ? allEnTexts : allUaTexts;
+    const { canUsePremium } = useSubscription();
     const a = c.addAgent;
     const { agentId } = useParams<{ agentId?: string }>();
     const dispatch = useDispatch();
@@ -171,6 +174,12 @@ const AddAgent = () => {
 
     return (
         <div className="mx-auto bg-gray-200 pt-20 xl:px-6 px-3 pb-10 min-h-screen">
+            {!canUsePremium && (
+                <div className="max-w-2xl mx-auto mb-4">
+                    <SubscriptionBanner requiredPlan="premium" />
+                </div>
+            )}
+            <div className={!canUsePremium ? 'pointer-events-none opacity-50 select-none' : ''}>
             <div className="mx-auto max-w-2xl bg-white rounded-2xl shadow-md p-6 flex flex-col gap-5">
 
                 {/* ── Header ──────────────────────────────────── */}
@@ -282,6 +291,7 @@ const AddAgent = () => {
                 </div>
 
             </div>
+            </div>{/* end canUsePremium guard */}
         </div>
     );
 };

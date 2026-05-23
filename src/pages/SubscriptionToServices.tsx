@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react';
 import { motion, useInView } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAppSelector } from '../app/hooks';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import LiqPayButton from '../components/LiqPayButton';
+import { useSubscription } from '../hooks/useSubscription';
 
 /* ── Animation helpers ──────────────────────────────────────────── */
 
@@ -39,15 +41,15 @@ const IconShield = () => (
     </svg>
 );
 
-const IconReturn = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#6b7280">
-        <path d="M440-80q-75 0-140.5-28.5T190-188L88-290l57-57 102 102q35 33 79 51t94 18q83 0 141.5-58.5T620-376q0-83-58.5-141.5T420-576H313l73 72-57 56-170-170 170-170 57 56-73 72h107q117 0 198.5 81.5T700-376q0 117-81.5 198.5T440-80Z" />
-    </svg>
-);
-
 const IconCalendar = () => (
     <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="#6b7280">
         <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Z" />
+    </svg>
+);
+
+const IconInfo = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="#9ca3af" className="shrink-0 mt-0.5">
+        <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z" />
     </svg>
 );
 
@@ -66,6 +68,17 @@ const Feature = ({ text, color }: { text: string; color: string }) => (
         </span>
         {text}
     </li>
+);
+
+/* ── Active plan badge ──────────────────────────────────────────── */
+
+const ActiveBadge = ({ label }: { label: string }) => (
+    <div className="mb-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-xs font-semibold self-start">
+        <svg xmlns="http://www.w3.org/2000/svg" height="13px" viewBox="0 -960 960 960" width="13px" fill="currentColor">
+            <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+        </svg>
+        {label}
+    </div>
 );
 
 /* ── FAQ item ───────────────────────────────────────────────────── */
@@ -98,13 +111,21 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
 const SubscriptionToServices = () => {
     const { language } = useLanguage();
     const t = (language === 'en' ? allEnTexts : allUaTexts).subscriptionToServices;
+    const isRegistration = useAppSelector(state => state.registration.isRegistered);
+    const { subscribeType } = useSubscription();
 
+    const isFreePlan     = isRegistration && subscribeType === 'Free';
+    const isStandardPlan = isRegistration && subscribeType === 'Standard';
+    const isPremiumPlan  = isRegistration && subscribeType === 'Premium';
+
+    const freeFeatures     = [t.free1, t.free2, t.free3, t.free4, t.free5, t.free6];
     const standardFeatures = [t.std1, t.std2, t.std3, t.std4, t.std5];
-    const premiumFeatures = [t.prem1, t.prem2, t.prem3, t.prem4, t.prem5, t.prem6, t.prem7, t.prem8];
+    const premiumFeatures  = [t.prem1, t.prem2, t.prem3, t.prem4, t.prem5, t.prem6, t.prem7];
     const faqItems = [
         { q: t.faq1Q, a: t.faq1A },
         { q: t.faq2Q, a: t.faq2A },
         { q: t.faq3Q, a: t.faq3A },
+        { q: t.faq4Q, a: t.faq4A },
     ];
 
     return (
@@ -124,20 +145,58 @@ const SubscriptionToServices = () => {
                 </AnimatedSection>
 
                 {/* ── Pricing cards ──────────────────────────────── */}
-                <AnimatedSection className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                <AnimatedSection className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
-                    {/* Standard card */}
+                    {/* ── Free card ── */}
                     <motion.div
                         variants={fadeUp}
-                        className="bg-white rounded-2xl shadow-md p-6 flex flex-col border border-gray-100 hover:shadow-lg transition-shadow duration-300"
+                        className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-shadow duration-300 hover:shadow-lg
+                            ${isFreePlan ? 'border-2 border-green-400' : 'border border-gray-100'}`}
                     >
-                        <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 uppercase tracking-wide mb-5 self-start">
+                        <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-600 uppercase tracking-wide mb-3 self-start">
+                            {t.freeName}
+                        </span>
+
+                        {isFreePlan && <ActiveBadge label={t.activePlan} />}
+
+                        <div className="flex items-end gap-1 mb-2">
+                            <span className="text-3xl font-black text-gray-800">{t.freePriceLabel}</span>
+                        </div>
+
+                        <p className="text-sm text-gray-500 mb-6 leading-relaxed">{t.freeDesc}</p>
+
+                        <hr className="border-gray-100 mb-5" />
+
+                        <ul className={`flex flex-col gap-3 flex-1 ${(isStandardPlan || isPremiumPlan) ? 'mb-8' : ''}`}>
+                            {freeFeatures.map((f, i) => (
+                                <Feature key={i} text={f} color="#6b7280" />
+                            ))}
+                        </ul>
+
+                        {(isStandardPlan || isPremiumPlan) && (
+                            <LiqPayButton
+                                plan="free"
+                                label={t.downgradeCta}
+                                className="w-full py-3 rounded-xl !bg-gray-100 hover:!bg-gray-200 active:!bg-gray-300 text-gray-700 text-sm font-semibold transition-colors duration-200 !shadow-none !border-0 min-h-[44px]"
+                            />
+                        )}
+                    </motion.div>
+
+                    {/* ── Standard card ── */}
+                    <motion.div
+                        variants={fadeUp}
+                        className={`bg-white rounded-2xl shadow-md p-6 flex flex-col transition-shadow duration-300 hover:shadow-lg
+                            ${isStandardPlan ? 'border-2 border-green-400' : 'border border-gray-100'}`}
+                    >
+                        <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-blue-50 text-blue-700 uppercase tracking-wide mb-3 self-start">
                             {t.standardName}
                         </span>
 
+                        {isStandardPlan && <ActiveBadge label={t.activePlan} />}
+
                         <div className="flex items-end gap-1 mb-2">
                             <span className="text-4xl font-black text-gray-800">{t.standardPrice}</span>
-                            <span className="text-gray-400 text-sm pb-1">грн {t.monthly}</span>
+                            <span className="text-gray-400 text-sm pb-1">грн {t.quarterly}</span>
                         </div>
 
                         <p className="text-sm text-gray-500 mb-6 leading-relaxed">{t.standardDesc}</p>
@@ -157,25 +216,35 @@ const SubscriptionToServices = () => {
                         />
                     </motion.div>
 
-                    {/* Premium card */}
+                    {/* ── Premium card ── */}
                     <motion.div
                         variants={fadeUp}
-                        className="relative bg-white rounded-2xl shadow-xl p-6 flex flex-col border-2 border-amber-400 hover:shadow-2xl transition-shadow duration-300"
+                        className={`relative bg-white rounded-2xl shadow-xl p-6 flex flex-col transition-shadow duration-300 hover:shadow-2xl
+                            ${isPremiumPlan ? 'border-2 border-green-400' : 'border-2 border-amber-400'}`}
                     >
-                        {/* Popular badge */}
+                        {/* Top badge: active plan OR popular */}
                         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                            <span className="inline-block text-xs font-bold px-4 py-1 rounded-full bg-amber-400 text-white uppercase tracking-wide shadow-sm whitespace-nowrap">
-                                {t.popular}
-                            </span>
+                            {isPremiumPlan ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-bold px-4 py-1 rounded-full bg-green-500 text-white uppercase tracking-wide shadow-sm whitespace-nowrap">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="12px" viewBox="0 -960 960 960" width="12px" fill="white">
+                                        <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                                    </svg>
+                                    {t.activePlan}
+                                </span>
+                            ) : (
+                                <span className="inline-block text-xs font-bold px-4 py-1 rounded-full bg-amber-400 text-white uppercase tracking-wide shadow-sm whitespace-nowrap">
+                                    {t.popular}
+                                </span>
+                            )}
                         </div>
 
-                        <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 uppercase tracking-wide mb-5 self-start mt-3">
+                        <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-700 uppercase tracking-wide mb-3 self-start mt-3">
                             {t.premiumName}
                         </span>
 
                         <div className="flex items-end gap-1 mb-2">
                             <span className="text-4xl font-black text-gray-800">{t.premiumPrice}</span>
-                            <span className="text-gray-400 text-sm pb-1">грн {t.monthly}</span>
+                            <span className="text-gray-400 text-sm pb-1">грн {t.quarterly}</span>
                         </div>
 
                         <p className="text-sm text-gray-500 mb-6 leading-relaxed">{t.premiumDesc}</p>
@@ -197,6 +266,17 @@ const SubscriptionToServices = () => {
 
                 </AnimatedSection>
 
+                {/* ── No-refund notice ───────────────────────────── */}
+                <AnimatedSection>
+                    <motion.div
+                        variants={fadeUp}
+                        className="flex items-start gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-5 py-3 mb-8"
+                    >
+                        <IconInfo />
+                        <p className="text-xs text-gray-500 leading-relaxed">{t.noRefundNotice}</p>
+                    </motion.div>
+                </AnimatedSection>
+
                 {/* ── Trust badges ───────────────────────────────── */}
                 <AnimatedSection>
                     <motion.div
@@ -205,7 +285,6 @@ const SubscriptionToServices = () => {
                     >
                         {[
                             { icon: <IconShield />, text: t.securePayment },
-                            { icon: <IconReturn />, text: t.guarantee },
                             { icon: <IconCalendar />, text: t.cancelAnytime },
                         ].map((item, i) => (
                             <div key={i} className="flex items-center gap-2 text-sm text-gray-500">

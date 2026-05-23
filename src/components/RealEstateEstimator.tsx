@@ -4,15 +4,21 @@ import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 const RealEstateEstimator = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts;
+    const t = contents.subscriptionBanner;
     const [propertyDescription, setPropertyDescription] = useState('');
     const [estimatedPrice, setEstimatedPrice] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [errorDetails, setErrorDetails] = useState('');
     const [conversationHistory, setConversationHistory] = useState<{ question: string; answer: string }[]>([]);
+    const [hasUsedToday, setHasUsedToday] = useState(
+        () => localStorage.getItem('estimatorLastUsed') === TODAY
+    );
 
     const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_AI_API_KEY_OLD });
 
@@ -37,6 +43,8 @@ const RealEstateEstimator = () => {
             if (!response?.text) throw new Error("Empty response from Google AI service");
             setEstimatedPrice(response.text);
             setConversationHistory(prev => [...prev, { question: propertyDescription, answer: response.text! }]);
+            localStorage.setItem('estimatorLastUsed', TODAY);
+            setHasUsedToday(true);
         } catch (err) {
             let reason = "Unknown error";
             if (typeof err === 'object' && err !== null) {
@@ -70,6 +78,20 @@ const RealEstateEstimator = () => {
     return (
         <div className="bg-gray-100 min-h-screen">
             <div className="h-16" />
+            {hasUsedToday && (
+                <div className="max-w-2xl mx-auto px-4 pt-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 flex items-start gap-3 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="#2563eb" className="shrink-0 mt-0.5">
+                            <path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/>
+                        </svg>
+                        <div>
+                            <p className="text-sm font-bold text-blue-900">{t.dailyLimitTitle}</p>
+                            <p className="text-sm text-blue-700 mt-0.5">{t.dailyLimitMsg}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            <div>
 
             <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-5">
 
@@ -99,12 +121,12 @@ const RealEstateEstimator = () => {
                         onChange={e => setPropertyDescription(e.target.value)}
                         placeholder={contents.estimator[4].text}
                         rows={5}
-                        disabled={loading}
+                        disabled={loading || hasUsedToday}
                     />
                     <div className="flex gap-3">
                         <button
                             onClick={estimatePropertyValue}
-                            disabled={loading || !propertyDescription.trim()}
+                            disabled={loading || hasUsedToday || !propertyDescription.trim()}
                             className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {loading ? (
@@ -202,6 +224,7 @@ const RealEstateEstimator = () => {
                     </div>
                 )}
 
+            </div>
             </div>
         </div>
     );

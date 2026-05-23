@@ -9,6 +9,8 @@ import { useParams, Link } from 'react-router-dom';
 import { RootState } from "../app/store";
 import L from "leaflet";
 import "leaflet-control-geocoder";
+import { useSubscription } from '../hooks/useSubscription';
+import SubscriptionBanner from '../components/SubscriptionBanner';
 
 /* ── Sub-components ──────────────────────────────────────────────── */
 
@@ -90,6 +92,7 @@ const Notification = () => {
     const { language } = useLanguage();
     const contents = language === 'en' ? allEnTexts : allUaTexts;
     const n = contents.notification;
+    const { canUseStandard } = useSubscription();
 
     const userId = useSelector((state: RootState) => state.registration.userId);
     const dispatch = useDispatch();
@@ -277,6 +280,12 @@ const Notification = () => {
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
             <div className="h-16" />
+            {!canUseStandard && (
+                <div className="max-w-2xl mx-auto px-4">
+                    <SubscriptionBanner requiredPlan="standard" />
+                </div>
+            )}
+            <div className={!canUseStandard ? 'pointer-events-none opacity-50 select-none' : ''}>
 
             {/* ── Hero ─────────────────────────────────────────────── */}
             <motion.div
@@ -493,6 +502,7 @@ const Notification = () => {
 
                 </div>
             </motion.form>
+            </div>{/* end canUseStandard guard */}
         </div>
     );
 };

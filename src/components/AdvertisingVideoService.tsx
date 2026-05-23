@@ -4,6 +4,8 @@ import VideoUploader from "./VideoUploader";
 import { useLanguage } from '../context/LanguageContext';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
+import { useSubscription } from '../hooks/useSubscription';
+import SubscriptionBanner from './SubscriptionBanner';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUD_NAME;
 
@@ -19,6 +21,7 @@ interface AdVideo {
 const AdvertisingVideoService = () => {
     const { language } = useLanguage();
     const t = (language === 'en' ? allEnTexts : allUaTexts).advertisingVideo;
+    const { canUsePremium } = useSubscription();
     const [message, setMessage] = useState('');
     const [success, setSuccess] = useState('');
     const [adsString, setAdsString] = useState('');
@@ -154,6 +157,8 @@ const AdvertisingVideoService = () => {
     return (
         <div className="min-h-screen bg-[#F8FAFC]">
         <div className="mx-auto max-w-2xl flex flex-col gap-5 pt-20 pb-10 px-4">
+            {!canUsePremium && <SubscriptionBanner requiredPlan="premium" />}
+            <div className={!canUsePremium ? 'pointer-events-none opacity-50 select-none' : ''}>
 
             {/* ── Upload section ──────────────────────────────── */}
             <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4">
@@ -286,6 +291,7 @@ const AdvertisingVideoService = () => {
                 )}
             </div>
 
+        </div>{/* end canUsePremium guard */}
         </div>
         </div>
     );
