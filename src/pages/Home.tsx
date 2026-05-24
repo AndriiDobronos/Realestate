@@ -41,6 +41,9 @@ interface HomeListing {
     numberOfStoreysOfBuilding?: number;
 }
 
+// Module-level cache — survives navigation within a session, reset on hard reload
+let listingsCache: HomeListing[] = [];
+
 const Home = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts
@@ -60,8 +63,8 @@ const Home = () => {
     const [openFilter, setOpenFilter] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [openInfo, setOpenInfo] = useState(false);
-    const [listings, setListings] = useState<HomeListing[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [listings, setListings] = useState<HomeListing[]>(listingsCache);
+    const [loading, setLoading] = useState(listingsCache.length === 0);
     const [featuredAd, setFeaturedAd] = useState({adsString:"", videoUrl:[""]});
     const filteredListings = !openFilter ? listings : listings.filter((listing) => {
         try {
@@ -276,7 +279,8 @@ const Home = () => {
     useEffect(() => {
         const getData = async () => {
             const data = await fetchListings();
-            setListings(data);
+            listingsCache = data as HomeListing[];
+            setListings(listingsCache);
             setLoading(false);
         };
         getData();
@@ -297,7 +301,10 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRegistration, userName]);
 
+    // @ts-expect-error reserved for dev reset, called via commented button below
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleDevReset = async () => {
+        listingsCache = [];
         // auth + registration + server logout
         await handleResetUserData((data) => setListings(data as unknown as HomeListing[]));
         // all other slices
@@ -742,11 +749,11 @@ const Home = () => {
 
 
             {/* TODO: remove before deploy */}
-            <div className="container mx-auto text-center py-10">
+            {/* <div className="container mx-auto text-center py-10">
                 <button onClick={handleDevReset}>
                     **** 🔄 DEV: Reset all state ****
                 </button>
-            </div>
+            </div> */}
 
 
             {/* Popular Listings Section */}

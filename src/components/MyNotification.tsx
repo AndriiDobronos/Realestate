@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
-import noNotificationsFound from '../assets/images/noNotificationsFound.png';
+import noNotificationsFound from '../assets/images/noNotificationsFound.webp';
 
 interface Notification {
     _id: string;

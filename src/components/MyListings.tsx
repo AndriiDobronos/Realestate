@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
-import noListingsImage from "../assets/images/don'tHaveAnyListingsYet.png";
+import noListingsImage from "../assets/images/don'tHaveAnyListingsYet.webp";
 
 interface MyListing {
     _id: string;
