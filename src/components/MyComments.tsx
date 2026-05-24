@@ -5,7 +5,7 @@ import { useIsAdmin } from '../app/hooks';
 import { useLanguage } from "../context/LanguageContext";
 import allEnTexts from '../contents/allEnTexts';
 import allUaTexts from '../contents/allUaTexts';
-import noCommentsFound from '../assets/images/noCommentsFound.png';
+import noCommentsFound from '../assets/images/noCommentsFound.webp';
 
 interface Comment {
     _id: string;

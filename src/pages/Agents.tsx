@@ -6,6 +6,27 @@ import allUaTexts from '../contents/allUaTexts';
 import { useLanguage } from "../context/LanguageContext";
 import Footer from "../components/Footer";
 
+const AgentSkeleton = () => (
+    <li className="flex flex-col bg-white rounded-2xl shadow-md overflow-hidden">
+        <div className="h-[280px] w-full bg-gray-200 animate-pulse" />
+        <div className="flex flex-col flex-1 p-5 gap-3">
+            <div className="flex flex-col gap-2">
+                <div className="h-5 bg-gray-200 rounded-full animate-pulse w-3/4" />
+                <div className="h-4 bg-gray-200 rounded-full animate-pulse w-1/2" />
+                <div className="h-4 bg-gray-200 rounded-full animate-pulse w-2/3" />
+            </div>
+            <div className="flex gap-2">
+                <div className="h-10 w-20 bg-gray-200 rounded-full animate-pulse" />
+                <div className="h-10 w-20 bg-gray-200 rounded-full animate-pulse" />
+                <div className="h-10 w-20 bg-gray-200 rounded-full animate-pulse" />
+            </div>
+            <div className="h-4 bg-gray-200 rounded-full animate-pulse w-1/2" />
+            <div className="h-3 bg-gray-200 rounded-full animate-pulse w-full mt-auto" />
+            <div className="h-10 bg-gray-200 rounded-xl animate-pulse w-full" />
+        </div>
+    </li>
+);
+
 interface AgentData {
     _id: string;
     name: string;
@@ -19,18 +40,26 @@ interface AgentData {
     phone: string;
 }
 
+let agentsCache: AgentData[] = [];
+
 const Agents = () => {
     const { language } = useLanguage();
     const contents = language === "en" ? allEnTexts : allUaTexts;
     const isAdmin = useIsAdmin();
-    const [agentsData, setAgentsData] = useState<AgentData[]>([]);
+    const [agentsData, setAgentsData] = useState<AgentData[]>(agentsCache);
+    const [isLoading, setIsLoading] = useState(agentsCache.length === 0);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         const fetchAgents = async () => {
-            const response = await fetch(`${API_URL}/agents`, { credentials: "include" });
-            const data = await response.json();
-            setAgentsData(data);
+            try {
+                const response = await fetch(`${API_URL}/agents`, { credentials: "include" });
+                const data = await response.json();
+                agentsCache = data as AgentData[];
+                setAgentsData(agentsCache);
+            } finally {
+                setIsLoading(false);
+            }
         };
         fetchAgents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,7 +72,7 @@ const Agents = () => {
     };
 
     return (
-        <div>
+        <div className="page-enter">
             <div className="h-[64px]" />
             <div className="mx-auto p-8 flex flex-col text-gray-600">
                 <div className="mb-10 text-center">
@@ -56,7 +85,9 @@ const Agents = () => {
                 </div>
 
                 <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {agentsData.map((agent) => (
+                    {isLoading
+                        ? Array.from({ length: 6 }).map((_, i) => <AgentSkeleton key={i} />)
+                        : agentsData.map((agent) => (
                         <li
                             key={agent._id}
                             className="group flex flex-col bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"

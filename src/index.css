@@ -88,3 +88,11 @@ button:focus-visible {
     color: #747bff;
   }
 }
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: pageFadeIn 0.18s ease-out forwards;
+}
