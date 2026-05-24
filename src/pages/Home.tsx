@@ -545,7 +545,7 @@ const Home = () => {
 
                             {!openFilter && <div className="absolute w-[86%] mt-[-21px]"
                                              style={!activeRotate ? {transform: "rotateX(-74deg) translateY(-1740px) translateX(0px)",
-                                                 transitionDuration:"700ms", scale:"0.496", zIndex:"0" } :
+                                                 transitionDuration:"700ms", scale:"0.496", zIndex:"0", pointerEvents:"none" } :
                                                  {transitionDuration:"700ms", marginTop:"-376px", width:"90%", zIndex:"21"}}
                                              onClick={() => setActiveRotate(true)}
                             ><div className="relative w-full duration-300 ease-in-out hover:scale-100">

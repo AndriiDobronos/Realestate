@@ -291,6 +291,7 @@
         {id:"6",text:"License plate: # "},
         {id:"7",text:"Hello"},
         {id:"8",text:"I would like to discuss a property with you."},
+        {id:"9",text:"No agents yet"},
     ],
     listings:{
         editModeTitle:          "Listing editing mode:",

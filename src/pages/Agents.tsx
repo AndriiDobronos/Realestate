@@ -51,6 +51,7 @@ const Agents = () => {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     useEffect(() => {
+        if (agentsCache.length > 0) return;
         const fetchAgents = async () => {
             try {
                 const response = await fetch(`${API_URL}/agents`, { credentials: "include" });
@@ -87,7 +88,9 @@ const Agents = () => {
                 <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {isLoading
                         ? Array.from({ length: 6 }).map((_, i) => <AgentSkeleton key={i} />)
-                        : agentsData.map((agent) => (
+                        : agentsData.length === 0
+                            ? <li className="col-span-full text-center text-gray-400 py-16 text-lg">{contents.agents[9].text}</li>
+                            : agentsData.map((agent) => (
                         <li
                             key={agent._id}
                             className="group flex flex-col bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
