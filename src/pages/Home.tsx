@@ -547,8 +547,14 @@ const Home = () => {
                                              style={!activeRotate ? {transform: "rotateX(-74deg) translateY(-1740px) translateX(0px)",
                                                  transitionDuration:"700ms", scale:"0.496", zIndex:"0", pointerEvents:"none" } :
                                                  {transitionDuration:"700ms", marginTop:"-376px", width:"90%", zIndex:"21"}}
-                                             onClick={() => setActiveRotate(true)}
                             ><div className="relative w-full duration-300 ease-in-out hover:scale-100">
+                                {!activeRotate && (
+                                    <div
+                                        className="absolute inset-0 z-[1] cursor-pointer"
+                                        style={{ pointerEvents:"auto", marginLeft:"55px", marginRight:"55px" }}
+                                        onClick={() => setActiveRotate(true)}
+                                    />
+                                )}
                                 {activeRotate && <button  onClick={(e)=>{e.stopPropagation(); setActiveRotate(false)}}
                                                           className="absolute top-3 z-[2001] py-1 rounded-[4px] bg-red-100 text-gray-700">
                                     {contents.offers[31].text}
