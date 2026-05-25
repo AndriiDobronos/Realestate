@@ -373,8 +373,8 @@ const Home = () => {
                 <div className="relative w-full  flex mt-16 flex-col lg:flex-row">
 
                     <div id="leftSide" className="text-center py-10 relative min-h-[80%] lg:w-1/2">
-                        <h2 className="text-2xl sm:text-4xl font-bold mb-4">{contents.offers[0].text}</h2>
-                        <p className=" mb-6 xl:text-lg">{contents.offers[1].text}</p>
+                        <h2 className="text-4xl font-bold mb-4 text-blue-200">{contents.offers[0].text}</h2>
+                        <p className=" mb-6 xl:text-lg text-blue-200">{contents.offers[1].text}</p>
                         <div className="flex flex-wrap gap-2 sm:gap-4 justify-center">
                             <button
                                 onClick={scrollToListings}

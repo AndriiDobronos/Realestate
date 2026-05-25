@@ -59,7 +59,7 @@
         {id:"29",text:"– Try resetting filters with the “Reset Filter” button to show all listings again."},
         {id:"30",text:"🟦 The blue circle shows your selected area. Only listings inside that circle are displayed."},
         {id:"31",text:"Collapse map"},
-        {id:"32",text:"To place your Advertisement,"},
+        {id:"32",text:"To place your listing,"},
         {id:"33",text:"Register to Post an Advertisement"},
         {id:"34",text:"fill out the form with your property details."},
         {id:"35",text:"Your offer will reach the right audience right away."},
