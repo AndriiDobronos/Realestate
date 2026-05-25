@@ -130,10 +130,12 @@ const PromotionYourListing = () => {
 
     return (
         <div className="min-h-screen bg-[#050810] text-white overflow-x-hidden">
-            {!canUseStandard && (
+            {!canUseStandard ? (
                 <div className="max-w-5xl mx-auto px-6 pt-24">
                     <SubscriptionBanner requiredPlan="standard" />
                 </div>
+            ) : (
+                <div className="h-16" />
             )}
             <div className={!canUseStandard ? 'pointer-events-none opacity-50 select-none' : ''}>
 
