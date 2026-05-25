@@ -133,6 +133,9 @@
         {id:"0",text:"Drag & drop image"},
         {id:"1",text:"or click to browse"},
         {id:"2",text:"Tap to upload a photo"},
+        {id:"3",text:"Please upload an image file"},
+        {id:"4",text:"File is too large. Maximum size is 10 MB"},
+        {id:"5",text:"Failed to upload image"},
     ],
     login:[
         {id:"0",text:"Sign In"},

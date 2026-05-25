@@ -23,7 +23,7 @@ const About = () => {
                             {a[0].text}
                         </span>
 
-                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 leading-tight">
+                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white leading-tight">
                             {a[1].text}
                         </h1>
 

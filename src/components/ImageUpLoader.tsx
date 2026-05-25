@@ -30,7 +30,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ index, onUploadComplete, 
 
     const upload = async (file: File) => {
         if (!file.type.startsWith('image/')) {
-            setError('Please upload an image file');
+            setError(contents.imageUploader[3].text);
+            return;
+        }
+        const MAX_SIZE_MB = 10;
+        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+            setError(contents.imageUploader[4].text);
             return;
         }
         setUploading(true);
@@ -46,7 +51,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ index, onUploadComplete, 
             setImageUrl(response.data.secure_url);
             onUploadComplete(index, response.data.secure_url);
         } catch {
-            setError('Failed to upload image');
+            setError(contents.imageUploader[5].text);
             onUploadComplete(index, '');
         } finally {
             setUploading(false);

@@ -162,7 +162,7 @@ const MyComments = () => {
             <div className="h-[64px]" />
             <section className="py-10 px-8">
                 <div className="mx-auto">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-3">
                         {m[15].text}{userName}{m[1].text}
                     </h1>
 

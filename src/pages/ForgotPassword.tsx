@@ -128,7 +128,7 @@ const ForgotPassword: React.FC = () => {
                                     <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm320-280L160-640v400h640v-400L480-440Zm0-80 320-200H160l320 200ZM160-640v-80 480-400Z"/>
                                 </svg>
                             </div>
-                            <h1 className="text-2xl font-bold text-[#0F172A] mb-2">
+                            <h1 className="text-2xl font-bold text-[#0F172A] dark:text-white mb-2">
                                 {contents.forgotPassword.sentTitle}
                             </h1>
                             <p className="text-[#64748B] text-sm leading-relaxed mb-2">
@@ -162,7 +162,7 @@ const ForgotPassword: React.FC = () => {
                                 {contents.forgotPassword.backToLogin}
                             </button>
 
-                            <h1 className="text-2xl font-bold text-[#0F172A] mb-1.5">
+                            <h1 className="text-2xl font-bold text-[#0F172A] dark:text-white mb-1.5">
                                 {contents.forgotPassword.title}
                             </h1>
                             <p className="text-[#64748B] text-sm mb-7">
