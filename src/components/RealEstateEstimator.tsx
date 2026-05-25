@@ -103,7 +103,7 @@ const RealEstateEstimator = () => {
                         </svg>
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800 dark:text-white">{contents.estimator[2].text}</h1>
+                        <h1 className="text-xl font-bold text-gray-800">{contents.estimator[2].text}</h1>
                         <p className="text-sm text-gray-500 mt-1">{contents.estimator[3].text}</p>
                     </div>
                 </div>

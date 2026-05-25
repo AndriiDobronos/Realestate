@@ -297,7 +297,7 @@ const Notification = () => {
                 <div className="w-14 h-14 rounded-2xl bg-[#2563EB]/10 flex items-center justify-center mx-auto mb-4">
                     <IconBell />
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-[#0F172A] dark:text-white mb-2">{n[15].text}</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-[#0F172A] mb-2">{n[15].text}</h1>
                 <p className="text-[#64748B] max-w-md mx-auto text-sm leading-relaxed">{n[0].text}</p>
             </motion.div>
 
