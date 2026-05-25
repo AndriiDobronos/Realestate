@@ -109,6 +109,7 @@ const Listings = () => {
     const [prompt, setPrompt] = useState(["", ""]);
     const [price, setPrice] = useState('');
     const [show, setShow] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showMap, setShowMap] = useState<boolean>(false);
     const [isFirstPageComplete, setIsFirstPageComplete] = useState<boolean>(false);
     const [isSecondPageComplete, setIsSecondPageComplete] = useState<boolean>(false);
@@ -300,6 +301,8 @@ const Listings = () => {
     }, [formData.typeOfNovelty, formData.numbersOfRooms, formData.totalArea, formData.numberOfFloor, formData.numberOfStoreysOfBuilding]);
 
     const handleAddOrSaveListing = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         try {
             const commonData = {
                 typeOfNovelty: `${formData.typeOfNovelty}`,
@@ -343,6 +346,8 @@ const Listings = () => {
             const errorMessage = isEditMode ? "Failed to update listing:" : "Failed to add listing:";
             const e = error as { response?: { data?: { message?: string } }; message?: string };
             setMessage(`${errorMessage} ${e.response?.data?.message || e.message || String(error)}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -731,13 +736,20 @@ const Listings = () => {
                                         <motion.div key="actions" className="flex flex-col gap-2">
                                             {show && (
                                                 <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.97 }}
+                                                    whileHover={isSubmitting ? {} : { scale: 1.02 }}
+                                                    whileTap={isSubmitting ? {} : { scale: 0.97 }}
                                                     onClick={handleAddOrSaveListing}
-                                                    className={`w-full py-2.5 rounded-xl text-white font-bold text-sm tracking-wide !shadow-none !border-0
+                                                    disabled={isSubmitting}
+                                                    className={`w-full py-2.5 rounded-xl text-white font-bold text-sm tracking-wide !shadow-none !border-0 flex items-center justify-center gap-2 transition-opacity
+                                                        ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}
                                                         ${isEditMode ? '!bg-amber-500' : '!bg-[#2563EB]'}`}
                                                 >
-                                                    {isEditMode ? contents.listings.saveChanges : contents.listings.publish}
+                                                    {isSubmitting && (
+                                                        <div className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin shrink-0" />
+                                                    )}
+                                                    {isSubmitting
+                                                        ? contents.listings.publishing
+                                                        : isEditMode ? contents.listings.saveChanges : contents.listings.publish}
                                                 </motion.button>
                                             )}
 

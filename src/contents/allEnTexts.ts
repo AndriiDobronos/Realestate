@@ -313,6 +313,7 @@
         next:                   "Next",
         photoInstruction:       "Fill the slots with 2 to 6 photos of your property",
         saveChanges:            "Save Changes",
+        publishing:             "Publishing...",
         publish:                "Add Listing",
         backToListings:         "Back to my Listings",
         deleteListing:          "Delete Listing",
