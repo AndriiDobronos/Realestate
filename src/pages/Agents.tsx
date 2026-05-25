@@ -77,7 +77,7 @@ const Agents = () => {
             <div className="h-[64px]" />
             <div className="mx-auto p-8 flex flex-col text-gray-600">
                 <div className="mb-10 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-3">
                         {contents.agents[0].text}
                     </h1>
                     <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto">

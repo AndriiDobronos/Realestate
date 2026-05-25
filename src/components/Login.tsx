@@ -512,7 +512,7 @@ const Login: React.FC = () => {
                     </div>
 
                     {/* Title */}
-                    <h1 className="text-2xl font-bold text-[#0F172A] mb-1.5">
+                    <h1 className="text-2xl font-bold text-[#0F172A] dark:text-white mb-1.5">
                         {contents.login[0].text}
                     </h1>
                     <p className="text-[#64748B] text-sm mb-7">

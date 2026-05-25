@@ -301,8 +301,6 @@ const Home = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRegistration, userName]);
 
-    // @ts-expect-error reserved for dev reset, called via commented button below
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handleDevReset = async () => {
         listingsCache = [];
         // auth + registration + server logout
@@ -743,7 +741,7 @@ const Home = () => {
                 <motion.div
                     animate={{ y: [0, 10, 0] }}
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 z-10 cursor-pointer"
+                    className="hidden sm:block absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 z-10 cursor-pointer"
                     onClick={scrollToListings}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px" fill="currentColor">
@@ -755,18 +753,18 @@ const Home = () => {
 
 
             {/* TODO: remove before deploy */}
-            {/* <div className="container mx-auto text-center py-10">
+            <div className="container hidden mx-auto text-center py-10">
                 <button onClick={handleDevReset}>
                     **** 🔄 DEV: Reset all state ****
                 </button>
-            </div> */}
+            </div>
 
 
             {/* Popular Listings Section */}
             <section id="listings" className="py-10 px-4 xl:px-8" >
                 <div className="mx-auto">
                     <div className="mb-10 text-center">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-3">
                         {contents.offers[38].text}
                     </h1>
                     <p className="text-base sm:text-lg text-gray-500 max-w-2xl mx-auto">

@@ -162,7 +162,7 @@ const ChatPage = () => {
                                 <path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/>
                             </svg>
                         </Link>
-                        <h1 className="font-bold text-gray-800 text-lg">{c.title}</h1>
+                        <h1 className="font-bold text-gray-800 dark:text-white text-lg">{c.title}</h1>
                     </div>
                     {sellerChats.length === 0 ? (
                         <div className="py-16 text-center text-gray-400 text-sm">{c.noMessages}</div>

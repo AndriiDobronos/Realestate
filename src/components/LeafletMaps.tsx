@@ -126,8 +126,10 @@ const LeafletMaps = ({
             const effectiveRange: number = isFilterEmpty ? Infinity : filter.rangeValue;
 
             // ── Resolve map center ──────────────────────────────────────────
-            let centerLat = 50.006; // default: Kharkiv
-            let centerLon = 36.23;
+            // Default: geographic center of Ukraine
+            let centerLat = 49.0;
+            let centerLon = 31.0;
+            let defaultZoom = 6;
 
             if (!isFilterEmpty && filter.destination) {
                 try {
@@ -138,8 +140,20 @@ const LeafletMaps = ({
                     if (hits.length > 0) {
                         centerLat = parseFloat(hits[0].lat);
                         centerLon = parseFloat(hits[0].lon);
+                        defaultZoom = 12;
                     }
-                } catch { /* stay at Kharkiv default */ }
+                } catch { /* stay at Ukraine center */ }
+            } else if (isFilterEmpty) {
+                // Center on the centroid of cached listing coordinates
+                const cache = readCoordsCache();
+                const known = listings
+                    .filter(l => l.location && cache[l.location])
+                    .map(l => cache[l.location]);
+                if (known.length > 0) {
+                    centerLat = known.reduce((s, c) => s + c.lat, 0) / known.length;
+                    centerLon = known.reduce((s, c) => s + c.lon, 0) / known.length;
+                    defaultZoom = 10;
+                }
             }
 
             if (cancelled) return;
@@ -149,7 +163,7 @@ const LeafletMaps = ({
             if (circleRef.current)       { map.removeLayer(circleRef.current);        circleRef.current       = null; }
             if (centerMarkerRef.current) { map.removeLayer(centerMarkerRef.current);  centerMarkerRef.current = null; }
 
-            map.setView([centerLat, centerLon], isFilterEmpty ? 11 : 12);
+            map.setView([centerLat, centerLon], defaultZoom);
 
             if (!isFilterEmpty) {
                 circleRef.current = L.circle([centerLat, centerLon], {

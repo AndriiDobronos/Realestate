@@ -108,7 +108,7 @@ const MyListings = () => {
             <div className="h-[64px]" />
             <section className="pb-8 pt-2 px-8">
                 <div className="mx-auto">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-4">
                         {m[0].text}
                     </h1>
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
